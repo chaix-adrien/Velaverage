@@ -1,0 +1,14 @@
+{
+  "name": "Velaverage",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start"
+  },
+  "dependencies": {
+    "react": "15.3.2",
+    "react-native": "0.34.1",
+    "react-native-fs": "^2.0.1-rc.2",
+    "react-native-mp-android-chart": "^0.1.1"
+  }
+}
