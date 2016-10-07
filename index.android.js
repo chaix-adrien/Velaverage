@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   View,
+  RefreshControl,
   ListView
 } from 'react-native';
 import RNFS from 'react-native-fs'
@@ -29,9 +30,9 @@ const days_color = [
   "red",
   "blue",
   "green",
-  "yellow",
+  "#FF00FF",
   "#042423",
-  "#76352534",
+  "#FF6600",
   "cyan",
 ]
 
@@ -39,10 +40,10 @@ const legend = {
   enabled: true,
   fontStyle: 1,
   textColor: '#458DCB',
-  textSize: 11,
+  textSize: 13,
   position: 'BELOW_CHART_LEFT',
   form: 'CIRCLE',
-  formSize: 10,
+  formSize: 13,
   xEntrySpace: 5,
   yEntrySpace: 5,
   formToTextSpace: 3,
@@ -64,21 +65,11 @@ class Velaverage extends Component {
     super(props)
     this.state = {
       datas: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
+      refreshing: true,
     }
-    this.reload_data(5)
+    this.reload_data(30)
   }
 
-  //[station]:
-    //[jours]
-    // [moyenne par interval]
-
-  /*
-  dataStations: [
-  stationName: ""
-  stationNumber: x
-
-  ]
-  */
 
   manage_min_max = (station) => {
     const limitDataset = {...station.data.datasets[0]}
@@ -172,7 +163,7 @@ class Velaverage extends Component {
     brutData.forEach((data) => {
       if (!out[data.number]) {
         out[data.number] = {
-          title: data.name.split(' - ')[1],
+          title: data.name.split(' - ').slice(1).join(" - "),
           name: data.name,
           address: data.address,
           position: data.position,
@@ -199,24 +190,35 @@ class Velaverage extends Component {
     RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
-      this.setState({datas: this.state.datas.cloneWithRows(this.parse_data(intervalMin, parsed.data))})
+      this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(this.parse_data(intervalMin, parsed.data))})
     })
   }
 
+  onRefresh = () => {
+    this.setState({refreshing: true}, () => this.reload_data(30))
+  }
+
   render() {
+    const refreshControl = (
+      <RefreshControl
+        refreshing={this.state.refreshing}
+        onRefresh={() => this.onRefresh()}
+      />
+    )
     return (
       <View style={styles.container}>
         <ListView
           style={{flex: 1}}
           dataSource={this.state.datas}
           enableEmptySections={true}
+          refreshControl={refreshControl}
           renderRow={(station) => {
             console.log(station.title)
             return (
               <View>
-                <Text>{station.title}</Text>
+                <Text style={styles.graphTitle}>{station.title}</Text>
                 <LineChart
-                  style={{height:300, width: 400}}
+                  style={{height:300, width: 350}}
                   legend={legend}
                   data={station.data}
                   drawGridBackground={true}
@@ -261,9 +263,19 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 5,
   },
+  graphTitle: {
+    color: "black",
+    marginLeft: 5,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+  },
 });
 
 AppRegistry.registerComponent('Velaverage', () => Velaverage);
 
 
-//TODO: Add limit
+//TODO: view station suivi / add station 
+// nom perso aux station
+//choix de la precision
+//choix du jours (par station ?)
