@@ -18,13 +18,13 @@ import {LineChart} from 'react-native-mp-android-chart';
 
 const dataPath = "/sdcard/station.data"
 const days_name = [
+  "Dim",
   "Lun",
   "Mar",
   "Mer",
   "Jeu",
   "Ven",
   "Sam",
-  "Dim",
 ]
 const days_color = [
   "red",
@@ -118,16 +118,16 @@ class Velaverage extends Component {
         })
         return {
           yValues: dataDaySorted,
-          label: days_name[id - 1],
+          label: days_name[id],
           config: {
-            color: days_color[id - 1],
+            color: days_color[id],
             lineWidth: 2,
             drawValues: false,
             drawCircles: false,
             drawCubic: false,
-            highlightColor: days_color[id - 1],
+            highlightColor: days_color[id],
             drawFilled: true,
-            fillColor: days_color[id - 1],
+            fillColor: days_color[id],
             fillAlpha: 0,
           },
         }
