@@ -83,7 +83,7 @@ class Velaverage extends Component {
     limitDataset.yValues[1] = station.bike_stands
     station.data.datasets = station.data.datasets.concat(limitDataset)
   }
-  
+
   manage_data = (out, intervalMin) => {
     out.forEach((station) => {
       station.data.datasets = station.data.datasets.map((dataDay, id) => {
@@ -108,7 +108,6 @@ class Velaverage extends Component {
           intervalNumber++
           refTime = new Date(2016, 1, 1, 0, intervalMin * intervalNumber, 0, 0)
         }
-
         const dataDaySorted = daySorted.map((dayData) => {
           if (dayData) {
             const size = dayData.length
@@ -157,9 +156,9 @@ class Velaverage extends Component {
     return out
   }
 
-  parse_data = (intervalMin, brutData) => {
+  parse_data = (intervalMin, brutData) => { // Tri par STATION
     const out = []
-    brutData.forEach((data) => {
+    const notDuplicatedBrutData = brutData.filter((data) => {
       if (!out[data.number]) {
         out[data.number] = {
           title: data.name.split(' - ').slice(1).join(" - "),
@@ -175,21 +174,43 @@ class Velaverage extends Component {
         }
       }
       const data_date = new Date(data.last_update)
-      if (!out[data.number].data.datasets[data_date.getDay()]) {
+
+	    if (!out[data.number].data.datasets[data_date.getDay()]) {
         out[data.number].data.datasets[data_date.getDay()] = []
       }
-      out[data.number].data.datasets[data_date.getDay()].push(
-        {aviable: data.available_bikes, date: data.last_update}
-      )
+      const day = out[data.number].data.datasets[data_date.getDay()] 
+      if (!day.length || day[day.length - 1].date !== data.last_update) {
+        out[data.number].data.datasets[data_date.getDay()].push(
+          {aviable: data.available_bikes, date: data.last_update}
+        )
+        return true
+      } else {
+        return false
+      }
     })
-    return this.manage_data(out, intervalMin)
+    return {
+      parsedData: this.manage_data(out, intervalMin),
+      notDuplicatedData: notDuplicatedBrutData,
+    }
+  }
+
+  save_file = (data) => {
+    let jsonData = {
+      data: data,
+    }
+    jsonData = JSON.stringify(jsonData)
+    jsonData = jsonData.slice(0, -2)
+    jsonData = jsonData.concat(",\n")
+    RNFS.writeFile(dataPath, jsonData)
   }
 
   reload_data = (intervalMin) => {
-    RNFS.readFile(dataPath).then((content) => {
+      RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
-      this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(this.parse_data(intervalMin, parsed.data))})
+      const outData = this.parse_data(intervalMin, parsed.data)
+      this.save_file(outData.notDuplicatedData)
+      this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
     })
   }
 
@@ -277,3 +298,4 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 // nom perso aux station
 //choix de la precision
 //choix du jours (par station ?)
+//afficher ombre de velo actuel (a coté du titre / sur le graphique en affichant la valeur
