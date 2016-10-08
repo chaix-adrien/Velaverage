@@ -86,9 +86,9 @@ class Velaverage extends Component {
   
   manage_data = (out, intervalMin) => {
     out.forEach((station) => {
-      let refTime = new Date(2016, 1, 1, 0, 0, 0, 0)
       station.data.datasets = station.data.datasets.map((dataDay, id) => {
         let intervalNumber = 0
+        let refTime = new Date(2016, 1, 1, 0, 0, 0, 0)
         const daySorted = []
         while (refTime.getDay() === 1) {
           for (let i = 0; i < dataDay.length; i++) {
@@ -137,7 +137,6 @@ class Velaverage extends Component {
       station.data.datasets = []
       let j = 0
       for (let i = 0; i < dataSetsWithNull.length; i++) {
-        console.log()
         if (dataSetsWithNull[i]) {
           station.data.datasets[j++] = dataSetsWithNull[i]
         }
@@ -213,7 +212,6 @@ class Velaverage extends Component {
           enableEmptySections={true}
           refreshControl={refreshControl}
           renderRow={(station) => {
-            console.log(station.title)
             return (
               <View>
                 <Text style={styles.graphTitle}>{station.title}</Text>
