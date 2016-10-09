@@ -80,15 +80,16 @@ export class StationAverageGraph extends Component {
                   })
                 }}
               />
-              <TouchableOpacity style={{flex: 1, alignItems: "center"}}>
-                <Icon name="pencil-square" size={20} color="#FF8F00" 
-                  style={{flex: 1}}
-                  onPress={() => {
-                    this.setState({stationNameEditable: !this.state.stationNameEditable})
-                  }}
-                />
-              </TouchableOpacity>
-            <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+              <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+              <Icon
+                name="info-circle"
+                size={30}
+                color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
+                style={{flex: 1}}
+                onPress={() => {
+                  this.setState({stationNameEditable: !this.state.stationNameEditable})
+                }}
+              />
           </View>
           <LineChart
             style={{height:300, width: 350}}

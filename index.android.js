@@ -158,7 +158,6 @@ class Velaverage extends Component {
       if (!out[data.number]) {
         out[data.number] = {
           title: this.get_station_name(stationNames, data.number, data.name.split(' - ').slice(1).join(" - ")),
-          status: 'UNKNOWN',
           data: {
             xValues: this.get_xValues(intervalMin),
             datasets: [],
@@ -192,6 +191,7 @@ class Velaverage extends Component {
           out[stationData.number].number = stationData.number
           out[stationData.number].address = stationData.address
           out[stationData.number].position = stationData.position
+          out[stationData.number].status = stationData.status
           out[stationData.number].bike_stands =  stationData.bike_stands
         }
       })
@@ -293,7 +293,6 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 
 
 //TODO: view station suivi / add station 
-// nom perso aux station
 //choix de la precision
 //choix du jours (par station ?)
 //afficher ombre de velo actuel (a coté du titre / sur le graphique en affichant la valeur
