@@ -8,12 +8,30 @@ import {
   ListView,
   TextInput,
   TouchableOpacity,
+  AsyncStorage,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import {LineChart} from 'react-native-mp-android-chart';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import {days_color, days_name} from "./index.android.js"
+const days_name = [
+  "Dim",
+  "Lun",
+  "Mar",
+  "Mer",
+  "Jeu",
+  "Ven",
+  "Sam",
+]
+const days_color = [
+  "red",
+  "blue",
+  "green",
+  "#FF00FF",
+  "#042423",
+  "#FF6600",
+  "cyan",
+]
 const legend = {
   enabled: true,
   fontStyle: 1,
@@ -37,7 +55,8 @@ export class StationAverageGraph extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      stationNameEditable: false
+      stationNameEditable: false,
+      stationName: this.props.station.title,
     }
   }
   render()
@@ -48,8 +67,18 @@ export class StationAverageGraph extends Component {
           <View style={{flexDirection: "row", alignItems: "center"}}>
               <TextInput
                 style={[styles.graphTitle, {flex: 7}]}
-                value={station.title}
+                value={this.state.stationName}
                 editable={this.state.stationNameEditable}
+                onChangeText={(text) => {
+                    this.setState({stationName: text})
+                }}
+                onEndEditing={() => {
+                  AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNames) => {
+                    stationNames = JSON.parse(stationNames)
+                    stationNames[station.number.toString()] = this.state.stationName
+                    AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNames))
+                  })
+                }}
               />
               <TouchableOpacity style={{flex: 1, alignItems: "center"}}>
                 <Icon name="pencil-square" size={20} color="#FF8F00" 

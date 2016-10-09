@@ -12,7 +12,8 @@ import {
   View,
   RefreshControl,
   ListView,
-  TextInput
+  TextInput,
+  AsyncStorage,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 
@@ -142,12 +143,21 @@ class Velaverage extends Component {
     return out
   }
 
-  parse_data = (intervalMin, brutData) => { // Tri par STATION
+  get_station_name = (stationNames, number, actualName) => {
+    if (stationNames[number.toString()]) {
+      return stationNames[number.toString()]
+    } else {
+      stationNames[number.toString()] = actualName
+      return actualName
+    }
+  }
+
+  parse_data = (intervalMin, brutData, stationNames) => { // Tri par STATION
     const out = []
     const notDuplicatedBrutData = brutData.filter((data) => {
       if (!out[data.number]) {
         out[data.number] = {
-          title: data.name.split(' - ').slice(1).join(" - "),
+          title: this.get_station_name(stationNames, data.number, data.name.split(' - ').slice(1).join(" - ")),
           status: 'UNKNOWN',
           data: {
             xValues: this.get_xValues(intervalMin),
@@ -207,10 +217,19 @@ class Velaverage extends Component {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
       this.save_file(parsed, "/sdcard/station.data.backup")
-      this.parse_data(intervalMin, parsed.data).then((outData) => {
-        this.save_file(outData.notDuplicatedData, dataPath)
-        this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
-      })
+      AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNamesPerso) => {
+          if (!stationNamesPerso) {
+            stationNamesPerso = {}
+          }
+          else {
+            stationNamesPerso = JSON.parse(stationNamesPerso)
+          }
+          this.parse_data(intervalMin, parsed.data, stationNamesPerso).then((outData) => {
+            AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNamesPerso))
+            this.save_file(outData.notDuplicatedData, dataPath)
+            this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+          })
+        })
     })
   }
 
