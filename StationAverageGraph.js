@@ -6,10 +6,12 @@ import {
   View,
   RefreshControl,
   ListView,
-  TextInput
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import {LineChart} from 'react-native-mp-android-chart';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import {days_color, days_name} from "./index.android.js"
 const legend = {
@@ -34,21 +36,29 @@ const legend = {
 export class StationAverageGraph extends Component {
   constructor(props) {
     super(props)
+    this.state = {
+      stationNameEditable: false
+    }
   }
   render()
     {
       const {station} = this.props
       return(
         <View>
-          <View style={{flexDirection: "row"}}>
-            <TextInput
-              style={[styles.graphTitle, {flex: 8}]}
-              value={station.title}
-              editable={false}
-              onLongPress={() => {
-                
-              }}
-            />
+          <View style={{flexDirection: "row", alignItems: "center"}}>
+              <TextInput
+                style={[styles.graphTitle, {flex: 7}]}
+                value={station.title}
+                editable={this.state.stationNameEditable}
+              />
+              <TouchableOpacity style={{flex: 1, alignItems: "center"}}>
+                <Icon name="pencil-square" size={20} color="#FF8F00" 
+                  style={{flex: 1}}
+                  onPress={() => {
+                    this.setState({stationNameEditable: !this.state.stationNameEditable})
+                  }}
+                />
+              </TouchableOpacity>
             <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
           </View>
           <LineChart
@@ -80,7 +90,7 @@ const styles = StyleSheet.create({
   graphTitle: {
     color: "black",
     marginLeft: 5,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 'bold',
     marginTop: 20,
     height: 40,
