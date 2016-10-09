@@ -206,22 +206,23 @@ class Velaverage extends Component {
     })
   }
 
-  save_file = (data) => {
+  save_file = (data, filename) => {
     let jsonData = {
       data: data,
     }
     jsonData = JSON.stringify(jsonData)
     jsonData = jsonData.slice(0, -2)
     jsonData = jsonData.concat(",\n")
-    RNFS.writeFile(dataPath, jsonData)
+    RNFS.writeFile(filename, jsonData)
   }
 
   reload_data = (intervalMin) => {
       RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
+      this.save_file(parsed, "/sdcard/station.data.backup")
       this.parse_data(intervalMin, parsed.data).then((outData) => {
-        this.save_file(outData.notDuplicatedData)
+        this.save_file(outData.notDuplicatedData, dataPath)
         this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
       })
     })
