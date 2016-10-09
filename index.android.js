@@ -11,13 +11,16 @@ import {
   Text,
   View,
   RefreshControl,
-  ListView
+  ListView,
+  TextInput
 } from 'react-native';
 import RNFS from 'react-native-fs'
-import {LineChart} from 'react-native-mp-android-chart';
 
-const dataPath = "/sdcard/station.data"
-const days_name = [
+import {StationAverageGraph} from './StationAverageGraph.js'
+
+
+export const dataPath = "/sdcard/station.data"
+export const days_name = [
   "Dim",
   "Lun",
   "Mar",
@@ -26,7 +29,7 @@ const days_name = [
   "Ven",
   "Sam",
 ]
-const days_color = [
+export const days_color = [
   "red",
   "blue",
   "green",
@@ -36,24 +39,7 @@ const days_color = [
   "cyan",
 ]
 
-const legend = {
-  enabled: true,
-  fontStyle: 1,
-  textColor: '#458DCB',
-  textSize: 13,
-  position: 'BELOW_CHART_LEFT',
-  form: 'CIRCLE',
-  formSize: 13,
-  xEntrySpace: 5,
-  yEntrySpace: 5,
-  formToTextSpace: 3,
-  wordWrapEnabled: true,
-  maxSizePercent: 0.5,
-  custom: {
-    colors: days_color,
-    labels: days_name,
-  }
-}
+
 
 const get_minute_diff = (t1, t2) => {
   const act = new Date(t2)
@@ -248,29 +234,7 @@ class Velaverage extends Component {
           refreshControl={refreshControl}
           renderRow={(station) => {
             return (
-              <View>
-                <Text style={styles.graphTitle}>{station.title} ({station.available_bikes}/{station.bike_stands})</Text>
-                <LineChart
-                  style={{height:300, width: 350}}
-                  legend={legend}
-                  data={station.data}
-                  drawGridBackground={true}
-                  borderColor={'teal'}
-                  borderWidth={1}
-                  drawBorders={true}
-                  touchEnabled={true}
-                  dragEnabled={true}
-                  scaleEnabled={true}
-                  scaleXEnabled={true}
-                  scaleYEnabled={true}
-                  pinchZoom={true}
-                  doubleTapToZoomEnabled={true}
-                  dragDecelerationEnabled={true}
-                  dragDecelerationFrictionCoef={0.99}
-                  keepPositionOnRotation={false}
-                  description={{text: ''}}
-                />
-              </View>
+              <StationAverageGraph station={station}/>
             )
           }}
         />
@@ -302,6 +266,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 20,
+    height: 40,
   },
 });
 
