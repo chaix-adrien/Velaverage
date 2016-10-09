@@ -162,10 +162,6 @@ class Velaverage extends Component {
       if (!out[data.number]) {
         out[data.number] = {
           title: data.name.split(' - ').slice(1).join(" - "),
-          name: data.name,
-          address: data.address,
-          position: data.position,
-          bike_stands: data.bike_stands,
           status: 'UNKNOWN',
           data: {
             xValues: this.get_xValues(intervalMin),
@@ -188,10 +184,26 @@ class Velaverage extends Component {
         return false
       }
     })
-    return {
-      parsedData: this.manage_data(out, intervalMin),
-      notDuplicatedData: notDuplicatedBrutData,
-    }
+    return Promise.all(out.map((station, id) => {
+      return fetch(`https://api.jcdecaux.com/vls/v1/stations/${id}?contract=Toulouse&apiKey=0c707a2d7a2e439fca48906a35c3f8c45efb5bc9`).then((res) => {
+        return res.json()
+      })
+    })).then((values) => {
+      values.forEach((stationData) => {
+        if (stationData) {
+          out[stationData.number].available_bikes = stationData.available_bikes
+          out[stationData.number].name = stationData.name
+          out[stationData.number].number = stationData.number
+          out[stationData.number].address = stationData.address
+          out[stationData.number].position = stationData.position
+          out[stationData.number].bike_stands =  stationData.bike_stands
+        }
+      })
+      return {
+        parsedData: this.manage_data(out, intervalMin),
+        notDuplicatedData: notDuplicatedBrutData,
+      }
+    })
   }
 
   save_file = (data) => {
@@ -208,9 +220,10 @@ class Velaverage extends Component {
       RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
-      const outData = this.parse_data(intervalMin, parsed.data)
-      this.save_file(outData.notDuplicatedData)
-      this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+      this.parse_data(intervalMin, parsed.data).then((outData) => {
+        this.save_file(outData.notDuplicatedData)
+        this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+      })
     })
   }
 
@@ -235,7 +248,7 @@ class Velaverage extends Component {
           renderRow={(station) => {
             return (
               <View>
-                <Text style={styles.graphTitle}>{station.title}</Text>
+                <Text style={styles.graphTitle}>{station.title} ({station.available_bikes}/{station.bike_stands})</Text>
                 <LineChart
                   style={{height:300, width: 350}}
                   legend={legend}
