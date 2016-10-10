@@ -295,4 +295,3 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 //TODO: view station suivi / add station 
 //choix de la precision
 //choix du jours (par station ?)
-//afficher ombre de velo actuel (a coté du titre / sur le graphique en affichant la valeur

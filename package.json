@@ -11,6 +11,5 @@
     "react-native-fs": "^2.0.1-rc.2",
     "react-native-mp-android-chart": "^0.1.1",
     "react-native-vector-icons": "^2.1.0"
-  },
   }
 }
