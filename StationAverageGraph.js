@@ -24,13 +24,13 @@ const days_name = [
   "Sam",
 ]
 const days_color = [
+  "#042423",
   "red",
   "blue",
-  "green",
+  "#64dd17",
   "#FF00FF",
-  "#042423",
   "#FF6600",
-  "cyan",
+  "#29b6f6",
 ]
 const legend = {
   enabled: true,

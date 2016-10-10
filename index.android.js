@@ -31,13 +31,13 @@ export const days_name = [
   "Sam",
 ]
 export const days_color = [
+  "#042423",
   "red",
   "blue",
-  "green",
+  "#64dd17",
   "#FF00FF",
-  "#042423",
   "#FF6600",
-  "cyan",
+  "#29b6f6",
 ]
 
 
@@ -152,6 +152,41 @@ class Velaverage extends Component {
     }
   }
 
+  add_now_dataset = (out, number) => {
+    const today = new Date(Date.now())
+    let dayIsEnded = false
+    const todayDataSet = {
+      yValues: out[number].data.xValues.map((time) => {
+        const hour = time.split(":")[0]
+        const min = time.split(":")[1]
+        if (today.getHours() == hour) {
+          dayIsEnded = true
+        }
+        if ((dayIsEnded && today.getMinutes() < min) || dayIsEnded && today.getHours() != hour) {
+          dayIsEnded = false
+          return Math.floor(out[number].available_bikes)
+        } else {
+          return null
+        }
+      }),
+      label: "now",
+      config: {
+        color: "yellow",
+        lineWidth: 2,
+        drawValues: false,
+        drawCircles: true,
+        highlightColor: "yellow",
+        circleRadius: 10,
+        circleColor: days_color[today.getDay()],
+        circleColorHole: "#F8F8F8",
+        drawFilled: true,
+        fillColor: "yellow",
+        fillAlpha: 0,
+      },
+    }
+    out[number].data.datasets = out[number].data.datasets.concat(todayDataSet)
+  }
+
   parse_data = (intervalMin, brutData, stationNames) => { // Tri par STATION
     const out = []
     const notDuplicatedBrutData = brutData.filter((data) => {
@@ -184,6 +219,7 @@ class Velaverage extends Component {
         return res.json()
       })
     })).then((values) => {
+      const parsedData = this.manage_data(out, intervalMin)
       values.forEach((stationData) => {
         if (stationData) {
           out[stationData.number].available_bikes = stationData.available_bikes
@@ -193,10 +229,11 @@ class Velaverage extends Component {
           out[stationData.number].position = stationData.position
           out[stationData.number].status = stationData.status
           out[stationData.number].bike_stands =  stationData.bike_stands
+          this.add_now_dataset(out, stationData.number)
         }
       })
       return {
-        parsedData: this.manage_data(out, intervalMin),
+        parsedData: parsedData,
         notDuplicatedData: notDuplicatedBrutData,
       }
     })
