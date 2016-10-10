@@ -40,7 +40,42 @@ export const days_color = [
   "#29b6f6",
 ]
 
+const split_by_null = (array) => {
+  const skip_null = (array_tmp, start) => {
+    for (let i = start; i < array_tmp.length; i++) {
+      if (array_tmp[i] !== null) {
+        return i
+      }
+    }
+    return array_tmp.length
+  }
 
+  const find_next_null = (array_tmp, start) => {
+    for (let i = start; i < array_tmp.length; i++) {
+      if (array_tmp[i] === null) {
+        return i
+      }
+    }
+    return array_tmp.length
+  }
+
+  const out = []
+  let idStart = 0
+  let idEnd = -1
+  while (idEnd < array.length) {
+    idStart = skip_null(array, idEnd + 1)
+    idEnd = find_next_null(array, idStart)
+    const slice = array.map((value, id) => {
+      if (id < idStart || id > idEnd) {return null}
+      else {return value}
+    })
+    if (!slice.some((value) => value !== null)) {
+      return out
+    }
+    out.push(slice)
+  }
+  return out
+}
 
 const get_minute_diff = (t1, t2) => {
   const act = new Date(t2)
@@ -187,6 +222,29 @@ class Velaverage extends Component {
     out[number].data.datasets = out[number].data.datasets.concat(todayDataSet)
   }
 
+  manage_null_value = (data) => {
+    data.datasets = data.datasets.filter((dataset) =>
+    dataset.yValues.some((yvalue) => yvalue !== null)) // remove empty datasets
+    const tmpDatasets = data.datasets.slice(0)
+    for (let id = 0; id < tmpDatasets.length; id++) {
+      const dataset = data.datasets[id]
+      if (dataset.yValues.some((value) => !value)) {
+        const yValuesSplited = split_by_null(dataset.yValues)
+        const newDatasets = yValuesSplited.map((yvalues) => {
+          const newDataset = {...dataset}
+          newDataset.config = {...dataset.config}
+          newDataset.yValues = yvalues.slice(0)
+          return newDataset
+        })
+        data.datasets[id].yValues = [null]
+        data.datasets = data.datasets.concat(newDatasets)
+      }
+    }
+    data.datasets = data.datasets.filter((dataset) => {
+      return dataset.yValues.some((yvalue) => yvalue !== null)}) // remove splited datasets
+    return data.datasets
+  }
+
   parse_data = (intervalMin, brutData, stationNames) => { // Tri par STATION
     const out = []
     const notDuplicatedBrutData = brutData.filter((data) => {
@@ -222,14 +280,17 @@ class Velaverage extends Component {
       const parsedData = this.manage_data(out, intervalMin)
       values.forEach((stationData) => {
         if (stationData) {
-          out[stationData.number].available_bikes = stationData.available_bikes
-          out[stationData.number].name = stationData.name
-          out[stationData.number].number = stationData.number
-          out[stationData.number].address = stationData.address
-          out[stationData.number].position = stationData.position
-          out[stationData.number].status = stationData.status
-          out[stationData.number].bike_stands =  stationData.bike_stands
-          this.add_now_dataset(out, stationData.number)
+          parsedData[stationData.number].available_bikes = stationData.available_bikes
+          parsedData[stationData.number].name = stationData.name
+          parsedData[stationData.number].number = stationData.number
+          parsedData[stationData.number].address = stationData.address
+          parsedData[stationData.number].position = stationData.position
+          parsedData[stationData.number].status = stationData.status
+          parsedData[stationData.number].bike_stands =  stationData.bike_stands
+          if (parsedData[stationData.number].data) {
+            parsedData[stationData.number].data.datasets = this.manage_null_value(parsedData[stationData.number].data)
+          }
+          this.add_now_dataset(parsedData, stationData.number)
         }
       })
       return {
