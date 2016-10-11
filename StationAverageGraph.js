@@ -55,7 +55,7 @@ export class StationAverageGraph extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      stationNameEditable: false,
+      stationEditable: false,
       stationName: this.props.station.title,
     }
   }
@@ -68,7 +68,7 @@ export class StationAverageGraph extends Component {
               <TextInput
                 style={[styles.graphTitle, {flex: 7}]}
                 value={this.state.stationName}
-                editable={this.state.stationNameEditable}
+                editable={this.state.stationEditable}
                 onChangeText={(text) => {
                     this.setState({stationName: text})
                 }}
@@ -77,17 +77,37 @@ export class StationAverageGraph extends Component {
                     stationNames = JSON.parse(stationNames)
                     stationNames[station.number.toString()] = this.state.stationName
                     AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNames))
+                    this.setState({stationEditable: false})
                   })
                 }}
               />
-              <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+              {
+                (this.state.stationEditable) ?
+                  <View>
+                    <Icon
+                      name="angle-up"
+                      size={30}
+                      color="#004d40"
+                      style={{flex: 1, marginLeft: 5, marginRight: 5}}
+                      onPress={() => this.props.changeStationOrder(station, -1)}
+                    />
+                    <Icon
+                      name="angle-down"
+                      size={30}
+                      color="#004d40"
+                      style={{flex: 1, marginLeft: 5, marginRight: 5}}
+                      onPress={() => this.props.changeStationOrder(station, 1)}
+                    />
+                  </View>
+                : <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+              }
               <Icon
-                name="info-circle"
+                name={(this.state.stationEditable) ? "check-circle" : "gear"}
                 size={30}
                 color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
                 style={{flex: 1}}
                 onPress={() => {
-                  this.setState({stationNameEditable: !this.state.stationNameEditable})
+                  this.setState({stationEditable: !this.state.stationEditable})
                 }}
               />
           </View>

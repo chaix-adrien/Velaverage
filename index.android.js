@@ -13,6 +13,7 @@ import {
   RefreshControl,
   ListView,
   TextInput,
+  Dimensions,
   AsyncStorage,
 } from 'react-native';
 import RNFS from 'react-native-fs'
@@ -89,6 +90,10 @@ class Velaverage extends Component {
       datas: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
       refreshing: true,
     }
+    this.daySelectorDatas = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
+    this.daySelectorDatas = this.daySelectorDatas.cloneWithRows(days_color.map((color, id) => {
+      return {color: color, name: days_name[id]}
+    }))
     this.reload_data(30)
   }
 
@@ -313,6 +318,7 @@ class Velaverage extends Component {
   reload_data = (intervalMin) => {
       RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
+      console.log(jsonContent.slice(-200))
       const parsed = JSON.parse(jsonContent)
       this.save_file(parsed, "/sdcard/station.data.backup")
       AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNamesPerso) => {
@@ -324,8 +330,13 @@ class Velaverage extends Component {
           }
           this.parse_data(intervalMin, parsed.data, stationNamesPerso).then((outData) => {
             AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNamesPerso))
-            this.save_file(outData.notDuplicatedData, dataPath)
-            this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+            AsyncStorage.getItem('@Velaverage:stationOrderPerso', (err, order) => {
+              if (!order) {
+                order = outData.parsedData.map((station) => station.number)
+              }
+              this.save_file(outData.notDuplicatedData, dataPath)
+              this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+            })
           })
         })
     })
@@ -335,6 +346,27 @@ class Velaverage extends Component {
     this.setState({refreshing: true}, () => this.reload_data(30))
   }
 
+  changeStationOrder = (station, side) => {
+
+  }
+
+  displayDaySelector = () => {
+    const displayDay = (id) => {
+      return <Text style={[styles.daySelector, {backgroundColor: days_color[id]}]}>{days_name[id]}</Text>
+    }
+    return (
+      <View style={{flexDirection: "row"}}>
+        {displayDay(0)}
+        {displayDay(1)}
+        {displayDay(2)}
+        {displayDay(3)}
+        {displayDay(4)}
+        {displayDay(5)}
+        {displayDay(6)}
+      </View>
+    )
+  }
+
   render() {
     const refreshControl = (
       <RefreshControl
@@ -342,16 +374,38 @@ class Velaverage extends Component {
         onRefresh={() => this.onRefresh()}
       />
     )
+    /*<ListView
+      style={{flex: 1}}
+      dataSource={this.daySelectorDatas}
+      enableEmptySections={true}
+      horizontal={true}
+      refreshControl={refreshControl}
+      renderRow={(day) => {
+        return (
+          <View style={[styles.daySelector, {backgroundColor: day.color}]} />
+        )
+      }}
+    />*/
+    let listWithEmptyStart = this.state.datas.cloneWithRows([])
+    if (this.state.datas._dataBlob) {
+      listWithEmptyStart = this.state.datas.cloneWithRows(["daySelector"].concat(this.state.datas._dataBlob.s1))
+    }
     return (
       <View style={styles.container}>
         <ListView
           style={{flex: 1}}
-          dataSource={this.state.datas}
+          dataSource={listWithEmptyStart}
           enableEmptySections={true}
           refreshControl={refreshControl}
-          renderRow={(station) => {
+          renderRow={(station, id) => {
+            if (station === "daySelector") {
+              return this.displayDaySelector()
+            }
             return (
-              <StationAverageGraph station={station}/>
+              <StationAverageGraph
+                changeStationOrder={this.changeStationOrder}
+                station={station}
+              />
             )
           }}
         />
@@ -385,6 +439,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: 40,
   },
+  daySelector: {
+    height: 30,
+    margin: 1,
+    marginTop: 5,
+    borderRadius: 2,
+    flex: 1,
+    fontSize: 14,
+    textAlign: "center",
+    textAlignVertical: "center",
+    fontWeight: "bold",
+    textShadowOffset: {width: 1, height: 0},
+    textShadowRadius: 1,
+    textShadowColor: "white",
+  },
 });
 
 AppRegistry.registerComponent('Velaverage', () => Velaverage);
@@ -393,3 +461,5 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 //TODO: view station suivi / add station 
 //choix de la precision
 //choix du jours (par station ?)
+//field search station
+//personal station order
