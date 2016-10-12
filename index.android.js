@@ -100,6 +100,22 @@ class Velaverage extends Component {
     this.reload_data(30)
   }
 
+  load_station_data = () => {
+    return new Promise((resolve) => {
+      RNFS.readFile(RNFS.DocumentDirectoryPath + "/stationDataToulouse.json").then((content) => {
+        this.stationPermaData = JSON.parse(content)
+        resolve(this.stationPermaData)
+      }).catch((e) => {
+        fetch("https://developer.jcdecaux.com/rest/vls/stations/Toulouse.json").then((res) => res.json()).then((rep) => {
+          rep.sort((a, b) => a.number - b.number)
+          this.stationPermaData = rep
+          RNFS.writeFile(RNFS.DocumentDirectoryPath + "/stationDataToulouse.json", JSON.stringify(rep))
+          resolve(rep)
+        })
+      })
+    })
+  }
+
 
   manage_min_max = (station) => {
     const limitDataset = {...station.data.datasets[0]}
@@ -111,7 +127,7 @@ class Velaverage extends Component {
     limitDataset.config.drawFilled = false
     limitDataset.yValues = [...station.data.datasets[0].yValues]
     limitDataset.yValues[0] = 0
-    limitDataset.yValues[1] = station.bike_stands
+    limitDataset.yValues[1] = 25
     station.data.datasets = station.data.datasets.concat(limitDataset)
   }
 
@@ -273,6 +289,11 @@ class Velaverage extends Component {
           parsedData[stationData.number].position = stationData.position
           parsedData[stationData.number].status = stationData.status
           parsedData[stationData.number].bike_stands =  stationData.bike_stands
+          parsedData[stationData.number].data.datasets.forEach((dataset) => {
+            if (dataset.label === "limit") {
+              dataset.yValues[1] = stationData.bike_stands
+            }
+          })
           this.add_now_dataset(parsedData, stationData.number)
         }
       })
