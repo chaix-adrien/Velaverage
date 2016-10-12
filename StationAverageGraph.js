@@ -56,15 +56,25 @@ export class StationAverageGraph extends Component {
     super(props)
     this.state = {
       stationEditable: false,
-      stationName: this.props.station.title,
+      stationName: this.props.station_title,
     }
   }
+
+  shouldComponentUpdate(nProps, nState) {
+    console.log("update: ", nProps.station_title, this.props.station_title)
+    if (nProps.station_title !== this.props.station_title) {
+      console.log("update ok")
+      this.setState({stationName: nProps.station_title})
+    }
+    return true
+  }
+
   render()
     {
-      const {station} = this.props
+      const {station, changeStationName} = this.props
       return(
         <View>
-          <View style={{flexDirection: "row", alignItems: "center"}}>
+          <View style={{flexDirection: "row", alignItems: "center", width: 300}}>
               <TextInput
                 style={[styles.graphTitle, {flex: 7}]}
                 value={this.state.stationName}
@@ -72,45 +82,45 @@ export class StationAverageGraph extends Component {
                 onChangeText={(text) => {
                     this.setState({stationName: text})
                 }}
-                onEndEditing={() => {
-                  AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNames) => {
-                    stationNames = JSON.parse(stationNames)
-                    stationNames[station.number.toString()] = this.state.stationName
-                    AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNames))
-                    this.setState({stationEditable: false})
-                  })
-                }}
+                onEndEditing={() => changeStationName(station.number, this.state.stationName)}
               />
               {
                 (this.state.stationEditable) ?
+                null : <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+              }
                   <View>
                     <Icon
                       name="angle-up"
                       size={30}
                       color="#004d40"
                       style={{flex: 1, marginLeft: 5, marginRight: 5}}
-                      onPress={() => this.props.changeStationOrder(station, -1)}
+                      onPress={() => {
+                        this.setState({stationName: this.props.changeStationOrder(station.number, -1)})}
+                      }
                     />
                     <Icon
                       name="angle-down"
                       size={30}
                       color="#004d40"
                       style={{flex: 1, marginLeft: 5, marginRight: 5}}
-                      onPress={() => this.props.changeStationOrder(station, 1)}
+                      onPress={() => this.setState({stationName: this.props.changeStationOrder(station.number, 1)})}
                     />
                   </View>
-                : <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
-              }
               <Icon
                 name={(this.state.stationEditable) ? "check-circle" : "gear"}
                 size={30}
                 color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
                 style={{flex: 1}}
                 onPress={() => {
-                  this.setState({stationEditable: !this.state.stationEditable})
+                  this.setState({stationName: this.props.station_title, stationEditable: !this.state.stationEditable})
                 }}
               />
           </View>
+        </View>
+      )
+    }
+  }
+/*
           <LineChart
             style={{height:300, width: 350}}
             legend={legend}
@@ -130,12 +140,7 @@ export class StationAverageGraph extends Component {
             dragDecelerationFrictionCoef={0.99}
             keepPositionOnRotation={false}
             description={{text: ''}}
-          />
-        </View>
-      )
-    }
-  }
-
+          />*/
 const styles = StyleSheet.create({
   graphTitle: {
     color: "black",

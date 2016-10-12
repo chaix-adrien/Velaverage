@@ -93,11 +93,11 @@ class Velaverage extends Component {
       activeDay: days_name.map(() => true),
       datasRef: null,
     }
-    this.daySelectorDatas = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
-    this.daySelectorDatas = this.daySelectorDatas.cloneWithRows(days_color.map((color, id) => {
-      return {color: color, name: days_name[id]}
-    }))
-    this.reload_data(30)
+    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
+      this.followedStations = JSON.parse(res)
+      console.log("Start", this.followedStations)
+      this.reload_data(30)
+    })
   }
 
   load_station_data = () => {
@@ -247,12 +247,14 @@ class Velaverage extends Component {
     out[number].data.datasets = out[number].data.datasets.concat(todayDataSet)
   }
 
-  parse_data = (intervalMin, brutData, stationNames) => { // Tri par STATION
+  parse_data = (intervalMin, brutData) => { // Tri par STATION
     const out = []
     const notDuplicatedBrutData = brutData.filter((data) => {
       if (!out[data.number]) {
         out[data.number] = {
-          title: this.get_station_name(stationNames, data.number, data.name.split(' - ').slice(1).join(" - ")),
+          title: this.get_station_name(
+            this.getFollowedStation("number", data.number),
+            data.number, data.name.split(' - ').slice(1).join(" - ")),
           data: {
             xValues: this.get_xValues(intervalMin),
             datasets: [],
@@ -280,6 +282,7 @@ class Velaverage extends Component {
       })
     })).then((values) => {
       const parsedData = this.manage_data(out, intervalMin)
+      let i = 0
       values.forEach((stationData) => {
         if (stationData) {
           parsedData[stationData.number].available_bikes = stationData.available_bikes
@@ -293,7 +296,13 @@ class Velaverage extends Component {
             if (dataset.label === "limit") {
               dataset.yValues[1] = stationData.bike_stands
             }
-          })
+          })/*
+          this.followedStations[i++] = {
+            name: parsedData[stationData.number].title,
+            number: stationData.number,
+            order: i - 1
+          }
+          AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations))*/
           this.add_now_dataset(parsedData, stationData.number)
         }
       })
@@ -315,29 +324,16 @@ class Velaverage extends Component {
   }
 
   reload_data = (intervalMin) => {
-      RNFS.readFile(dataPath).then((content) => {
+    RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
       const parsed = JSON.parse(jsonContent)
       this.save_file(parsed, "/sdcard/station.data.backup")
-      AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNamesPerso) => {
-          if (!stationNamesPerso) {
-            stationNamesPerso = {}
-          }
-          else {
-            stationNamesPerso = JSON.parse(stationNamesPerso)
-          }
-          this.parse_data(intervalMin, parsed.data, stationNamesPerso).then((outData) => {
-            AsyncStorage.setItem('@Velaverage:stationNamesPerso', JSON.stringify(stationNamesPerso))
-            AsyncStorage.getItem('@Velaverage:stationOrderPerso', (err, order) => {
-              if (!order) {
-                order = outData.parsedData.map((station) => station.number)
-              }
-              this.save_file(outData.notDuplicatedData, dataPath)
-              const onlyActiveDayData = this.keepOnlyActiveDay(outData.parsedData, this.state.activeDay)
-              this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(onlyActiveDayData), datasRef: outData.parsedData})
-            })
-          })
-        })
+      this.parse_data(intervalMin, parsed.data).then((outData) => {
+        this.save_file(outData.notDuplicatedData, dataPath)
+        const onlyActiveDayData = this.keepOnlyActiveDay(outData.parsedData, this.state.activeDay)
+        const sortedDayData = this.sortStationByOrder(onlyActiveDayData)
+        this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(sortedDayData), datasRef: outData.parsedData})
+      })
     })
   }
 
@@ -345,8 +341,28 @@ class Velaverage extends Component {
     this.setState({refreshing: true}, () => this.reload_data(30))
   }
 
-  changeStationOrder = (station, side) => {
 
+  sortStationByOrder = (data) => {
+    const out = []
+    data.forEach((station) => {
+      out[this.getFollowedStation("number", station.number).order] = station
+    })
+    return out
+  }
+
+  changeStationOrder = (number, side) => {
+    const station = this.getFollowedStation("number", number)
+    console.log(station)
+    if (station.order + side < 0 || station.order + side >= this.followedStations.length) return station.name
+    const stationToSwitch = this.getFollowedStation("order", station.order + side)
+    stationToSwitch.order = station.order
+    station.order = station.order + side
+    const newDatas = this.sortStationByOrder(this.state.datasRef)
+    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations), () => {
+      this.setState({datas: this.state.datas.cloneWithRows(newDatas)})
+    })
+    console.log("return", stationToSwitch.name)
+    return stationToSwitch.name
   }
 
   keepOnlyActiveDay = (data, activeDay) => {
@@ -409,6 +425,15 @@ class Velaverage extends Component {
     )
   }
 
+  getFollowedStation = (by, value) => { 
+    return {...this.followedStations.filter((s) => s[by] === value)}['0']
+  }
+
+  changeStationName = (number, name) => {
+    this.getFollowedStation("number", number).name = name
+    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations))
+  }
+
   render() {
     const refreshControl = (
       <RefreshControl
@@ -427,12 +452,15 @@ class Velaverage extends Component {
           dataSource={listWithEmptyStart}
           enableEmptySections={true}
           refreshControl={refreshControl}
-          renderRow={(station, id) => {
+          renderRow={(station, sid, id) => {
             if (station === "daySelector") {
               return this.displayDaySelector()
             }
+            console.log(this.getFollowedStation("order", id - 1).name)
             return (
               <StationAverageGraph
+                changeStationName={this.changeStationName}
+                station_title={this.getFollowedStation("order", id - 1).name}
                 changeStationOrder={this.changeStationOrder}
                 station={station}
               />
