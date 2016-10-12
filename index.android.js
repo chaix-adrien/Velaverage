@@ -15,6 +15,7 @@ import {
   TextInput,
   Dimensions,
   AsyncStorage,
+  TouchableOpacity,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 
@@ -89,6 +90,8 @@ class Velaverage extends Component {
     this.state = {
       datas: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
       refreshing: true,
+      activeDay: days_name.map(() => true),
+      datasRef: null,
     }
     this.daySelectorDatas = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
     this.daySelectorDatas = this.daySelectorDatas.cloneWithRows(days_color.map((color, id) => {
@@ -103,6 +106,7 @@ class Velaverage extends Component {
     limitDataset.config = {...station.data.datasets[0].config}
     limitDataset.config.color = "#00000000"
     limitDataset.config.fillColor = "#00000000"
+    limitDataset.label = "limit"
     limitDataset.config.highlightColor = "#00000000"
     limitDataset.config.drawFilled = false
     limitDataset.yValues = [...station.data.datasets[0].yValues]
@@ -227,29 +231,6 @@ class Velaverage extends Component {
     out[number].data.datasets = out[number].data.datasets.concat(todayDataSet)
   }
 
-  manage_null_value = (data) => {
-    data.datasets = data.datasets.filter((dataset) =>
-    dataset.yValues.some((yvalue) => yvalue !== null)) // remove empty datasets
-    const tmpDatasets = data.datasets.slice(0)
-    for (let id = 0; id < tmpDatasets.length; id++) {
-      const dataset = data.datasets[id]
-      if (dataset.yValues.some((value) => !value)) {
-        const yValuesSplited = split_by_null(dataset.yValues)
-        const newDatasets = yValuesSplited.map((yvalues) => {
-          const newDataset = {...dataset}
-          newDataset.config = {...dataset.config}
-          newDataset.yValues = yvalues.slice(0)
-          return newDataset
-        })
-        data.datasets[id].yValues = [null]
-        data.datasets = data.datasets.concat(newDatasets)
-      }
-    }
-    data.datasets = data.datasets.filter((dataset) => {
-      return dataset.yValues.some((yvalue) => yvalue !== null)}) // remove splited datasets
-    return data.datasets
-  }
-
   parse_data = (intervalMin, brutData, stationNames) => { // Tri par STATION
     const out = []
     const notDuplicatedBrutData = brutData.filter((data) => {
@@ -292,9 +273,6 @@ class Velaverage extends Component {
           parsedData[stationData.number].position = stationData.position
           parsedData[stationData.number].status = stationData.status
           parsedData[stationData.number].bike_stands =  stationData.bike_stands
-          if (parsedData[stationData.number].data) {
-            parsedData[stationData.number].data.datasets = this.manage_null_value(parsedData[stationData.number].data)
-          }
           this.add_now_dataset(parsedData, stationData.number)
         }
       })
@@ -318,7 +296,6 @@ class Velaverage extends Component {
   reload_data = (intervalMin) => {
       RNFS.readFile(dataPath).then((content) => {
       jsonContent = content.slice(0, -2) + "]}"
-      console.log(jsonContent.slice(-200))
       const parsed = JSON.parse(jsonContent)
       this.save_file(parsed, "/sdcard/station.data.backup")
       AsyncStorage.getItem('@Velaverage:stationNamesPerso', (err, stationNamesPerso) => {
@@ -335,7 +312,8 @@ class Velaverage extends Component {
                 order = outData.parsedData.map((station) => station.number)
               }
               this.save_file(outData.notDuplicatedData, dataPath)
-              this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(outData.parsedData)})
+              const onlyActiveDayData = this.keepOnlyActiveDay(outData.parsedData, this.state.activeDay)
+              this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(onlyActiveDayData), datasRef: outData.parsedData})
             })
           })
         })
@@ -350,12 +328,55 @@ class Velaverage extends Component {
 
   }
 
+  keepOnlyActiveDay = (data, activeDay) => {
+    let out = JSON.parse(JSON.stringify(data))
+    out = out.filter((station) => {
+      if (station) {
+        const newDatasets = station.data.datasets.filter((dataset) => {
+          if (days_name.indexOf(dataset.label) === -1) return true
+          return activeDay[days_name.indexOf(dataset.label)]
+        })
+        station.data.datasets = newDatasets
+      }
+      return station
+    })
+    return out
+  }
+
+  manageActiveDay = (id) => {
+    let newActiveDay = this.state.activeDay.slice(0)
+    if (!id || this.state.activeDay.every((day, idday) => (idday === id) ? true : !day)) {
+          newActiveDay = days_name.map(() => true)
+    } else if (this.state.activeDay.every((day) => day)) {
+      newActiveDay = days_name.map(() => false)
+      newActiveDay[id] = true
+    } else {
+      newActiveDay[id] = !newActiveDay[id]
+    }
+    const newDatas = this.keepOnlyActiveDay(this.state.datasRef, newActiveDay)
+    this.setState({activeDay: newActiveDay, datas: this.state.datas.cloneWithRows(newDatas)})
+  }
+
   displayDaySelector = () => {
     const displayDay = (id) => {
-      return <Text style={[styles.daySelector, {backgroundColor: days_color[id]}]}>{days_name[id]}</Text>
+      return (
+        <TouchableOpacity
+          style={styles.daySelectorContainer}
+          onPress={() => this.manageActiveDay(id)}
+          onLongPress={() => this.manageActiveDay(null)}
+        >
+          <Text
+            style={[styles.daySelectorText, {backgroundColor: days_color[id], opacity: (this.state.activeDay[id]) ? 1 : 0.2}]}
+          >
+            {days_name[id]}
+          </Text>
+        </TouchableOpacity>
+      )
     }
     return (
-      <View style={{flexDirection: "row"}}>
+      <View
+        style={{flexDirection: "row"}}
+      >
         {displayDay(0)}
         {displayDay(1)}
         {displayDay(2)}
@@ -374,18 +395,6 @@ class Velaverage extends Component {
         onRefresh={() => this.onRefresh()}
       />
     )
-    /*<ListView
-      style={{flex: 1}}
-      dataSource={this.daySelectorDatas}
-      enableEmptySections={true}
-      horizontal={true}
-      refreshControl={refreshControl}
-      renderRow={(day) => {
-        return (
-          <View style={[styles.daySelector, {backgroundColor: day.color}]} />
-        )
-      }}
-    />*/
     let listWithEmptyStart = this.state.datas.cloneWithRows([])
     if (this.state.datas._dataBlob) {
       listWithEmptyStart = this.state.datas.cloneWithRows(["daySelector"].concat(this.state.datas._dataBlob.s1))
@@ -439,12 +448,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: 40,
   },
-  daySelector: {
-    height: 30,
+  daySelectorContainer: {
+    height: 40,
     margin: 1,
     marginTop: 5,
     borderRadius: 2,
     flex: 1,
+  },
+  daySelectorText: {
+    height: 40,
+    borderRadius: 2,
+    color: "black",
     fontSize: 14,
     textAlign: "center",
     textAlignVertical: "center",
