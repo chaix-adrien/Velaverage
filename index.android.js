@@ -95,9 +95,9 @@ class Velaverage extends Component {
     }
     AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
       this.followedStations = JSON.parse(res)
-      console.log("Start", this.followedStations)
       this.reload_data(30)
     })
+    this.changeStationOrderCallback = []
   }
 
   load_station_data = () => {
@@ -296,13 +296,7 @@ class Velaverage extends Component {
             if (dataset.label === "limit") {
               dataset.yValues[1] = stationData.bike_stands
             }
-          })/*
-          this.followedStations[i++] = {
-            name: parsedData[stationData.number].title,
-            number: stationData.number,
-            order: i - 1
-          }
-          AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations))*/
+          })
           this.add_now_dataset(parsedData, stationData.number)
         }
       })
@@ -350,18 +344,23 @@ class Velaverage extends Component {
     return out
   }
 
-  changeStationOrder = (number, side) => {
+  changeStationOrder = (number, side, callback) => {
     const station = this.getFollowedStation("number", number)
-    console.log(station)
+    if (!side) {
+      this.changeStationOrderCallback[station.order] = callback
+      return
+    }
     if (station.order + side < 0 || station.order + side >= this.followedStations.length) return station.name
     const stationToSwitch = this.getFollowedStation("order", station.order + side)
+    this.changeStationOrderCallback[station.order](false, stationToSwitch.name, callback)
+    this.changeStationOrderCallback[stationToSwitch.order](true, station.name, callback)
     stationToSwitch.order = station.order
     station.order = station.order + side
     const newDatas = this.sortStationByOrder(this.state.datasRef)
     AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations), () => {
       this.setState({datas: this.state.datas.cloneWithRows(newDatas)})
     })
-    console.log("return", stationToSwitch.name)
+    this.forceUpdate()
     return stationToSwitch.name
   }
 
@@ -432,6 +431,7 @@ class Velaverage extends Component {
   changeStationName = (number, name) => {
     this.getFollowedStation("number", number).name = name
     AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations))
+    this.forceUpdate()
   }
 
   render() {
@@ -456,7 +456,6 @@ class Velaverage extends Component {
             if (station === "daySelector") {
               return this.displayDaySelector()
             }
-            console.log(this.getFollowedStation("order", id - 1).name)
             return (
               <StationAverageGraph
                 changeStationName={this.changeStationName}

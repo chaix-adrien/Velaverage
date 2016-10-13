@@ -57,90 +57,94 @@ export class StationAverageGraph extends Component {
     this.state = {
       stationEditable: false,
       stationName: this.props.station_title,
+      isInputFocused: false,
     }
+    this.props.changeStationOrder(this.props.station.number, null, this.changeOrder)
   }
 
-  shouldComponentUpdate(nProps, nState) {
-    console.log("update: ", nProps.station_title, this.props.station_title)
-    if (nProps.station_title !== this.props.station_title) {
-      console.log("update ok")
-      this.setState({stationName: nProps.station_title})
-    }
-    return true
+  changeOrder = (origin, newName, toEditable) => {
+    const state = {stationName: newName}
+    state.stationEditable = (origin) ? toEditable : false
+    this.setState(state)
   }
 
-  render()
-    {
-      const {station, changeStationName} = this.props
-      return(
-        <View>
-          <View style={{flexDirection: "row", alignItems: "center", width: 300}}>
-              <TextInput
-                style={[styles.graphTitle, {flex: 7}]}
-                value={this.state.stationName}
-                editable={this.state.stationEditable}
-                onChangeText={(text) => {
-                    this.setState({stationName: text})
-                }}
-                onEndEditing={() => changeStationName(station.number, this.state.stationName)}
+  render() {
+    const {station, changeStationName} = this.props
+    return(
+      <View>
+        <View style={{flexDirection: "row", alignItems: "center"}}>
+            <TextInput
+              style={[styles.graphTitle, {flex: 7}]}
+              value={this.state.stationName}
+              editable={this.state.stationEditable}
+              onChangeText={(text) => {
+                  this.setState({stationName: text})
+              }}
+              onFocus={() => {
+                this.setState({isInputFocused: true})}}
+              onEndEditing={() => {
+                changeStationName(station.number, this.state.stationName)
+                this.setState({isInputFocused: false})
+              }}
               />
-              {
-                (this.state.stationEditable) ?
-                null : <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
-              }
-                  <View>
-                    <Icon
-                      name="angle-up"
-                      size={30}
-                      color="#004d40"
-                      style={{flex: 1, marginLeft: 5, marginRight: 5}}
-                      onPress={() => {
-                        this.setState({stationName: this.props.changeStationOrder(station.number, -1)})}
-                      }
-                    />
-                    <Icon
-                      name="angle-down"
-                      size={30}
-                      color="#004d40"
-                      style={{flex: 1, marginLeft: 5, marginRight: 5}}
-                      onPress={() => this.setState({stationName: this.props.changeStationOrder(station.number, 1)})}
-                    />
-                  </View>
-              <Icon
-                name={(this.state.stationEditable) ? "check-circle" : "gear"}
-                size={30}
-                color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
-                style={{flex: 1}}
-                onPress={() => {
-                  this.setState({stationName: this.props.station_title, stationEditable: !this.state.stationEditable})
-                }}
-              />
-          </View>
+            {
+              (this.state.stationEditable) ?
+              <View>
+                <Icon
+                  name="angle-up"
+                  size={30}
+                  color="#004d40"
+                  style={{flex: 1, marginLeft: 5, marginRight: 5}}
+                  onPress={() => {
+                    this.setState({stationName: this.props.changeStationOrder(station.number, -1, this.state.stationEditable)})
+                  }}
+                />
+                <Icon
+                  name="angle-down"
+                  size={30}
+                  color="#004d40"
+                  style={{flex: 1, marginLeft: 5, marginRight: 5}}
+                  onPress={() => this.setState({stationName: this.props.changeStationOrder(station.number, 1, this.state.stationEditable)})}
+                />
+              </View>
+              :
+              <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+            }
+            <Icon
+              name={(this.state.stationEditable) ? "check-circle" : "gear"}
+              size={30}
+              color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
+              style={{flex: 1}}
+              onPress={() => {
+                this.setState({stationName: this.props.station_title, stationEditable: !this.state.stationEditable})
+              }}
+            />
         </View>
-      )
-    }
+        <LineChart
+          style={{height:300, width: 350}}
+          legend={legend}
+          data={station.data}
+          drawGridBackground={true}
+          borderColor={'teal'}
+          borderWidth={1}
+          drawBorders={true}
+          touchEnabled={true}
+          dragEnabled={true}
+          scaleEnabled={true}
+          scaleXEnabled={true}
+          scaleYEnabled={true}
+          pinchZoom={true}
+          doubleTapToZoomEnabled={true}
+          dragDecelerationEnabled={true}
+          dragDecelerationFrictionCoef={0.99}
+          keepPositionOnRotation={false}
+          description={{text: ''}}
+        />
+      </View>
+    )
   }
-/*
-          <LineChart
-            style={{height:300, width: 350}}
-            legend={legend}
-            data={station.data}
-            drawGridBackground={true}
-            borderColor={'teal'}
-            borderWidth={1}
-            drawBorders={true}
-            touchEnabled={true}
-            dragEnabled={true}
-            scaleEnabled={true}
-            scaleXEnabled={true}
-            scaleYEnabled={true}
-            pinchZoom={true}
-            doubleTapToZoomEnabled={true}
-            dragDecelerationEnabled={true}
-            dragDecelerationFrictionCoef={0.99}
-            keepPositionOnRotation={false}
-            description={{text: ''}}
-          />*/
+}
+
 const styles = StyleSheet.create({
   graphTitle: {
     color: "black",
