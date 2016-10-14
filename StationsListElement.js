@@ -53,11 +53,12 @@ export class StationAvialablesBikes extends Component {
        </View>
        <View>
          <Icon
-          name="th-large"
-          size={20}
-          color={this.percent_to_color(station.available_bike_stands / station.bike_stands)}
-          style={{margin: 2}}
-        />
+            name="th-large"
+            size={20}
+            color={this.percent_to_color(station.available_bike_stands / station.bike_stands)}
+            style={{margin: 2}}
+            onPress={() => console.log("press on", station.name)}
+          />
         <Text style={styles.available_bikesText}>{station.available_bike_stands}</Text>
        </View>
      </View>
@@ -89,14 +90,14 @@ class StationsListElement extends Component {
             <StationAvialablesBikes station={realTimeInfo} />
             : null
           }
+          <TouchableOpacity onPress={() => this.props.un_followStation(station.number)} >
           <Icon
             name={this.props.followed ? "minus-circle" : "plus-circle"}
             size={40}
             color={this.props.followed ? "red" : "green"}
             style={{marginLeft: 10, marginRight: 5, marginBottom: (flexDirection === "row") ? 0 : 5}}
-            onPress={() => {
-            }}
           />
+          </TouchableOpacity>
          </View>
       </TouchableOpacity>
     )

@@ -144,6 +144,45 @@ class StationsList extends Component {
       this.setState({activeStationList:toDisplayList}, (callback) ? () => callback() : () => {})
     })
   }
+  getStation = (stations, by, value) => {
+    return {...stations.filter((s) => s[by] === value)}['0']
+  }
+
+  un_followStation = (number) => {
+    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
+      res = JSON.parse(res)
+      const station = this.getStation(res, "number", number)
+      let newFollowed = res.slice(0)
+      if (station) {
+        newFollowed = newFollowed.slice(0, res.indexOf(station)).concat(newFollowed.slice(res.indexOf(station) + 1))
+        newFollowed.sort((a, b) => a.order - b.order)
+        newFollowed.forEach((station, id) => (station.order = id))
+      } else {
+        let order = 0
+        res.forEach((station) => {
+          if (station.order > order) order = station.order
+        })
+        newFollowed.push({
+          number: number,
+          name:  this.getStation(this.stationsList, "number", number).name,
+          order: order + 1
+        })
+      }
+      AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(newFollowed))
+      const followedStations = []
+      this.stationsList.forEach((station, id) => {
+        for (let i = 0; i < newFollowed.length; i++) {
+          if (station.number === newFollowed[i].number) {
+            followedStations[station.number] = true
+          }
+        }
+        if (!followedStations[station.number]) {
+          followedStations[station.number] = false
+        }
+      })
+      this.setState({followedStations: followedStations})
+    })
+  }
 
   pressOnOnlyFollowed = (callback) => {
     let toDisplayList = []
@@ -170,6 +209,7 @@ class StationsList extends Component {
         renderRow={(rowData, sid, id) => <StationsListElement
           realTimeInfo={this.state.realTimeInfo[rowData.number]}
           station={rowData}
+          un_followStation={this.un_followStation}
           flexDirection="row"
           loadRealTimeInfo={this.loadRealTimeInfo}
           followed={this.state.followedStations[rowData.number]} />}
@@ -180,7 +220,7 @@ class StationsList extends Component {
   render() {
     const {query} = this.state
     const dataSearch = (query.length >= 1) ? this.state.activeStationList.filter((station) => {
-      if (station.name.toUpperCase().indexOf(query.toUpperCase()) !== -1 || station.address.toUpperCase().indexOf(query.toUpperCase()) !== -1) 
+      if (station.name.toUpperCase().indexOf(query.toUpperCase()) !== -1 || station.address.toUpperCase().indexOf(query.toUpperCase()) !== -1)
         return true
       return false
     }) : this.state.activeStationList
@@ -220,6 +260,7 @@ class StationsList extends Component {
           this.displayList(dataSearch)
           :
           <MapStations
+            un_followStation={this.un_followStation}
             followedStations={this.state.followedStations}
             stationList={dataSearch}
             loadRealTimeInfo={this.loadRealTimeInfo}

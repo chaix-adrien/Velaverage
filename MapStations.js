@@ -64,6 +64,7 @@ class MapStations extends Component {
                 onPress={() => this.props.loadRealTimeInfo(station.number, () => setTimeout(() => this.marker[station.number].showCallout(), 100))}
               >
                 <StationsListElement
+                  un_followStation={this.un_followStation}
                   flexDirection="column"
                   realTimeInfo={this.props.realTimeInfo[station.number]}
                   station={station}
