@@ -18,9 +18,11 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+var UIManager = require('NativeModules').UIManager;
 import RNFS from 'react-native-fs'
 import Spinner from 'react-native-loading-spinner-overlay';
 import StationsListElement from './StationsListElement'
+import Popover from 'react-native-popover'
 
 import MapView from 'react-native-maps';
 
@@ -35,14 +37,17 @@ class MapStations extends Component {
         longitudeDelta: 0.20409498363733292,
       },
       loading: 0,
+      displayPopup: null,
     }
     this.marker = []
   }
 
   render() {
     return (
-        <View style={{flex: 1}}>
-          <MapView 
+        <View style={{flex: 1}} onLayout={({nativeEvent: {layout}}) =>
+        this.popupRect={x: layout.x + layout.width / 2, y: layout.y + layout.height / 2 - 40, width: 1, height: 1,}}>
+          <MapView
+            ref={(elem) => (this.map = elem)}
             style={{flex: 1, width: Dimensions.get('window').width}}
             initialRegion={{
               latitude: 43.612758579787766,
@@ -50,29 +55,32 @@ class MapStations extends Component {
               latitudeDelta: 0.16756966830353548,
               longitudeDelta: 0.20409498363733292,
             }}
-         >
-           {(this.props.stationList) ? this.props.stationList.map((station, id) => (
-             <MapView.Marker
-               ref={(elem) => (this.marker[station.number] = elem)}
-               key={id}
-               coordinate={station}
-               pinColor={this.props.followedStations[station.number] ? "green" : "red"}
-             >
-              <MapView.Callout
-                tooltip={false}
-                style={{width: 250, height: 100}}
-                onPress={() => this.props.loadRealTimeInfo(station.number, () => setTimeout(() => this.marker[station.number].showCallout(), 100))}
-              >
-                <StationsListElement
-                  un_followStation={this.un_followStation}
-                  flexDirection="column"
-                  realTimeInfo={this.props.realTimeInfo[station.number]}
-                  station={station}
-                  followed={this.props.followedStations[station.number]} />
-              </MapView.Callout>
-             </MapView.Marker>
-           )) : null}
-         </MapView>
+          >
+          {(this.props.stationList) ? this.props.stationList.map((station, id) => (
+            <MapView.Marker
+              ref={(elem) => (this.marker[station.number] = elem)}
+              key={id}
+              coordinate={station}
+              pinColor={this.props.followedStations[station.number] ? "green" : "red"}
+              onPress={() => this.setState({displayPopup: true, popupStation: station})}
+            />
+          )) : null}
+        </MapView>
+          <Popover
+          placement="top"
+            isVisible={this.state.displayPopup}
+            fromRect={this.popupRect}
+            onClose={() => this.setState({displayPopup: false})}
+          >
+            <StationsListElement
+              realTimeInfo={this.props.realTimeInfo[this.state.popupStation ? this.state.popupStation.number : 0]}
+              station={this.state.popupStation}
+              un_followStation={this.props.un_followStation}
+              flexDirection="column"
+              loadRealTimeInfo={this.props.loadRealTimeInfo}
+              followed={this.props.followedStations[this.state.popupStation ? this.state.popupStation.number : 0]}
+            />
+          </Popover>
        </View>
     );
   }

@@ -287,3 +287,8 @@ const styles = StyleSheet.create({
   }
 });
  export default StationsList
+
+
+//TODO
+//Grouper les marker sur la map (trouver ceux qui sont dans la region, les packer)
+//on click on station de la map: ouvrir un modal avec StationAvialablesBikes

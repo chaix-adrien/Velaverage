@@ -57,7 +57,6 @@ export class StationAvialablesBikes extends Component {
             size={20}
             color={this.percent_to_color(station.available_bike_stands / station.bike_stands)}
             style={{margin: 2}}
-            onPress={() => console.log("press on", station.name)}
           />
         <Text style={styles.available_bikesText}>{station.available_bike_stands}</Text>
        </View>
