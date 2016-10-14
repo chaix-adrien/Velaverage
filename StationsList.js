@@ -16,55 +16,53 @@ import {
   Dimensions,
   AsyncStorage,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import RNFS from 'react-native-fs'
-import SegmentedControlTab from 'react-native-segmented-control-tab'
+import SearchBar from 'react-native-material-design-searchbar'
 import CheckBox from 'react-native-check-box'
 import Icon from 'react-native-vector-icons/FontAwesome';
+import SegmentedControlTab from 'react-native-segmented-control-tab'
+import StationsListElement from './StationsListElement'
 
 import MapStations from './MapStations'
-
-class StationsListElement extends Component {
-  constructor(props) {
-    super(props)
-  }
-
-  render() {
-    const {station} = this.props
-    return (
-      <View style={{flexDirection: "row", flex: 1, justifyContent: "space-between", borderBottomWidth: 1, borderColor: "grey"}}>
-        <View>
-          <Text style={styles.stationName}>{station.name.slice(7)}</Text>
-          <Text>{station.name.slice(7)}</Text>
-        </View>
-        <View style={{flexDirection: "row", marginLeft: 5}}>
-          <Text style={{fontSize: 16, fontWeight: "bold", textAlignVertical: "center"}}>(23/25)</Text>
-          <Icon
-            name={this.props.followed ? "minus-circle" : "plus-circle"}
-            size={40}
-            color={this.props.followed ? "red" : "green"}
-            style={{marginLeft: 5, marginRight: 5}}
-            onPress={() => {
-            }}
-          />
-         </View>
-      </View>
-    )
-  }
-}
 
 class StationsList extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      activeStationList: null,
+      activeStationList: [],
       displayMode: 0,
       onlyFollowed: false,
       followedStations: [],
+      realTimeInfo: [],
+      query: "",
     }
     this.load_station_data().then((stations) => {
       AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-        res = JSON.parse(res)
+        if (!res) {
+          res = [{
+            number: 111,
+            name: '00111 - MINIMES PASSERELLE',
+            order: 0,
+          },{
+            number: 122,
+            name: '00122 - PASSERELLE HAEDENS',
+            order: 1,
+          },{
+            number: 106,
+            name: '00106 - BRIENNE PASSERELLE',
+            order: 2,
+          },{
+            number: 265,
+            name: '00265 - PASSAGE BORDELONGUE',
+            order: 3,
+          }
+          ]
+          AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(res))
+        } else {
+          res = JSON.parse(res)
+        }
         this.stationsList = stations
         const followedStations = []
         stations.forEach((station, id) => {
@@ -101,9 +99,42 @@ class StationsList extends Component {
     })
   }
 
-  loadOnlyFollowedStation = () => {
+  loadRealTimeInfo = (number, callback) => {
+    console.log("LOAD REAL TIME", number)
+    return fetch(`https://api.jcdecaux.com/vls/v1/stations/${number}?contract=Toulouse&apiKey=0c707a2d7a2e439fca48906a35c3f8c45efb5bc9`).then((res) => res.json()).then((rep) => {
+      console.log("Get Res")
+      const newTab = this.state.realTimeInfo.slice(0)
+      newTab[number] = rep
+      this.setState({realTimeInfo: newTab}, (callback) ? () => callback() : () => {})
+    }).catch((e) => Alert.alert("Network Error", "Please check your internet conexion."))
+  }
+
+
+  loadOnlyFollowedStation = (callback) => {
     AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-      res = JSON.parse(res)
+      if (!res) {
+        res = [{
+          number: 111,
+          name: '00111 - MINIMES PASSERELLE',
+          order: 0,
+        },{
+          number: 122,
+          name: '00122 - PASSERELLE HAEDENS',
+          order: 1,
+        },{
+          number: 106,
+          name: '00106 - BRIENNE PASSERELLE',
+          order: 2,
+        },{
+          number: 265,
+          name: '00265 - PASSAGE BORDELONGUE',
+          order: 3,
+        }
+        ]
+        AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(res))
+      } else {
+        res = JSON.parse(res)
+      }
       const toDisplayList = []
       for (let i = 0; i < res.length; i++) {
         for (let j = 0; j < this.stationsList.length; j++) {
@@ -112,16 +143,16 @@ class StationsList extends Component {
           }
         }
       }
-      this.setState({activeStationList:toDisplayList})
+      this.setState({activeStationList:toDisplayList}, (callback) ? () => callback() : () => {})
     })
   }
 
-  pressOnOnlyFollowed = () => {
+  pressOnOnlyFollowed = (callback) => {
     let toDisplayList = []
     if (this.state.onlyFollowed) {
-      this.setState({onlyFollowed: !this.state.onlyFollowed, activeStationList: this.stationsList})
+      this.setState({onlyFollowed: !this.state.onlyFollowed, activeStationList: this.stationsList}, (callback) ? callback : () => {})
     } else {
-      this.setState({onlyFollowed: !this.state.onlyFollowed}, () => this.loadOnlyFollowedStation())
+      this.setState({onlyFollowed: !this.state.onlyFollowed}, () => this.loadOnlyFollowedStation(callback))
     }
   }
 
@@ -131,21 +162,43 @@ class StationsList extends Component {
     let listData = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
     return (
       <ListView
+        style={{width: Dimensions.get("window").width}}
         dataSource={listData.cloneWithRows(list.sort((a, b) => {
           const textA = a.name.slice(7).toUpperCase();
           const textB = b.name.slice(7).toUpperCase();
           return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
         }))}
         enableEmptySections={true}
-        renderRow={(rowData, sid, id) => <StationsListElement station={rowData} followed={this.state.followedStations[rowData.number]} />}
+        renderRow={(rowData, sid, id) => <StationsListElement
+          realTimeInfo={this.state.realTimeInfo[rowData.number]}
+          station={rowData}
+          flexDirection="row"
+          loadRealTimeInfo={this.loadRealTimeInfo}
+          followed={this.state.followedStations[rowData.number]} />}
       />
     )
   }
 
   render() {
+    const {query} = this.state
+    const dataSearch = (query.length >= 1) ? this.state.activeStationList.filter((station) => {
+      if (station.name.toUpperCase().indexOf(query.toUpperCase()) !== -1 || station.address.toUpperCase().indexOf(query.toUpperCase()) !== -1) 
+        return true
+      return false
+    }) : this.state.activeStationList
     return (
       <View style={styles.container}>
-        <View style={{flexDirection: "row"}}>
+        <View style={{width:Dimensions.get('window').width, elevation: 5, backgroundColor: "#F5FCFF"}}>
+          <SearchBar
+            onSearchChange={(event) => this.setState({query: event.nativeEvent.text})}
+            height={30}
+            placeholder={'Search station...'}
+            autoCorrect={false}
+            padding={5}
+            returnKeyType={'search'}
+          />
+        </View>
+        <View style={{flexDirection: "row", elevation: 5, backgroundColor: "#F5FCFF"}}>
           <SegmentedControlTab values={['List', 'Map']}
             borderRadius={3}
             tabsContainerStyle={{height: 40, width: 200, padding: 5}}
@@ -153,7 +206,9 @@ class StationsList extends Component {
             activeTabStyle={{backgroundColor: '#ef6c00'}}
             tabTextStyle={{color: '#ef6c00', fontWeight: 'bold'}}
             activeTabTextStyle={{color: 'white'}}
-            onTabPress={(selec) => this.setState({displayMode: selec})}
+            onTabPress={(selec) => {
+              this.setState({displayMode: selec})
+            }}
           />
           <CheckBox
             style={{flex: 1, padding: 10}}
@@ -162,13 +217,15 @@ class StationsList extends Component {
             leftText={"Only Followed"}
           />
         </View>
-        <View  style={{alignItems: "flex-start", flex: 1}}>
+        <View  style={{flex: 1}}>
         {(this.state.displayMode === 0) ?
-          this.displayList(this.state.activeStationList)
+          this.displayList(dataSearch)
           :
           <MapStations
             followedStations={this.state.followedStations}
-            stationList={this.state.activeStationList}
+            stationList={dataSearch}
+            loadRealTimeInfo={this.loadRealTimeInfo}
+            realTimeInfo={this.state.realTimeInfo}
           />
         }
         </View>

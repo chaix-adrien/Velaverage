@@ -16,9 +16,11 @@ import {
   Dimensions,
   AsyncStorage,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import Spinner from 'react-native-loading-spinner-overlay';
+import StationsListElement from './StationsListElement'
 
 import MapView from 'react-native-maps';
 
@@ -34,13 +36,14 @@ class MapStations extends Component {
       },
       loading: 0,
     }
+    this.marker = []
   }
 
   render() {
     return (
-        <View style={{flex: 1, width :500}}>
-          <MapView
-            style={{flex: 1, width :500}}
+        <View style={{flex: 1}}>
+          <MapView 
+            style={{flex: 1, width: Dimensions.get('window').width}}
             initialRegion={{
               latitude: 43.612758579787766,
               longitude: 1.4392240718007088,
@@ -50,13 +53,22 @@ class MapStations extends Component {
          >
            {(this.props.stationList) ? this.props.stationList.map((station, id) => (
              <MapView.Marker
+               ref={(elem) => (this.marker[station.number] = elem)}
                key={id}
                coordinate={station}
                pinColor={this.props.followedStations[station.number] ? "green" : "red"}
              >
-               <MapView.Callout tooltip={false} style={{width: 200, height: 50}}>
-                 <View style={{flex: 1, backgroundColor: "blue"}}/>
-               </MapView.Callout>
+              <MapView.Callout
+                tooltip={false}
+                style={{width: 250, height: 100}}
+                onPress={() => this.props.loadRealTimeInfo(station.number, () => setTimeout(() => this.marker[station.number].showCallout(), 100))}
+              >
+                <StationsListElement
+                  flexDirection="column"
+                  realTimeInfo={this.props.realTimeInfo[station.number]}
+                  station={station}
+                  followed={this.props.followedStations[station.number]} />
+              </MapView.Callout>
              </MapView.Marker>
            )) : null}
          </MapView>

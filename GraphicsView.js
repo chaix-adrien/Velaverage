@@ -100,22 +100,6 @@ class GraphicsView extends Component {
     this.changeStationOrderCallback = []
   }
 
-  load_station_data = () => {
-    return new Promise((resolve) => {
-      RNFS.readFile(RNFS.DocumentDirectoryPath + "/stationDataToulouse.json").then((content) => {
-        this.stationPermaData = JSON.parse(content)
-        resolve(this.stationPermaData)
-      }).catch((e) => {
-        fetch("https://developer.jcdecaux.com/rest/vls/stations/Toulouse.json").then((res) => res.json()).then((rep) => {
-          rep.sort((a, b) => a.number - b.number)
-          this.stationPermaData = rep
-          RNFS.writeFile(RNFS.DocumentDirectoryPath + "/stationDataToulouse.json", JSON.stringify(rep))
-          resolve(rep)
-        })
-      })
-    })
-  }
-
 
   manage_min_max = (station) => {
     const limitDataset = {...station.data.datasets[0]}
