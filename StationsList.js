@@ -100,13 +100,11 @@ class StationsList extends Component {
   }
 
   loadRealTimeInfo = (number, callback) => {
-    console.log("LOAD REAL TIME", number)
     return fetch(`https://api.jcdecaux.com/vls/v1/stations/${number}?contract=Toulouse&apiKey=0c707a2d7a2e439fca48906a35c3f8c45efb5bc9`).then((res) => res.json()).then((rep) => {
-      console.log("Get Res")
       const newTab = this.state.realTimeInfo.slice(0)
       newTab[number] = rep
       this.setState({realTimeInfo: newTab}, (callback) ? () => callback() : () => {})
-    }).catch((e) => Alert.alert("Network Error", "Please check your internet conexion."))
+    }).catch((e) => {console.log(e); Alert.alert("Network Error", "Please check your internet conexion.")})
   }
 
 

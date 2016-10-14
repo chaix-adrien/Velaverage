@@ -31,6 +31,13 @@ export class StationAvialablesBikes extends Component {
     super(props)
   }
 
+  percent_to_color = (percent) => {
+    if (percent > 0.5) return "green"
+    else if (percent > 0.3) return '#ef6c00'
+    else if (percent != 0) return "red"
+    else return "black"
+  }
+
   render() {
     const {station} = this.props
     return (
@@ -39,7 +46,7 @@ export class StationAvialablesBikes extends Component {
          <Icon
           name="bicycle"
           size={20}
-          color="green"
+          color={this.percent_to_color(station.available_bikes / station.bike_stands)}
           style={{margin: 2}}
         />
         <Text style={styles.available_bikesText}>{station.available_bikes}</Text>
@@ -48,8 +55,8 @@ export class StationAvialablesBikes extends Component {
          <Icon
           name="th-large"
           size={20}
+          color={this.percent_to_color(station.available_bike_stands / station.bike_stands)}
           style={{margin: 2}}
-          color="green"
         />
         <Text style={styles.available_bikesText}>{station.available_bike_stands}</Text>
        </View>
