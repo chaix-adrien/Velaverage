@@ -42,6 +42,72 @@ class MapStations extends Component {
     this.marker = []
   }
 
+  isInRegion = (coord, region) => {
+    if (coord.latitude >= region.latitude - region.latitudeDelta / 2
+      && coord.longitude >= region.longitude - region.latitudeDelta / 2
+      && coord.latitude <= region.latitude + region.latitudeDelta / 2
+      && coord.longitude <= region.longitude + region.longitudeDelta / 2)
+      return true
+    return false
+  }
+
+  getMedianMarker = (inRegion, id) => {
+    if (inRegion.length < 1) return null
+    const medianMarker = {
+      latitude: 0,
+      longitude: 0,
+      stations: inRegion,
+    }
+    inRegion.forEach((station) => {
+      medianMarker.latitude += station.latitude
+      medianMarker.longitude += station.longitude
+    })
+    medianMarker.latitude /= inRegion.length
+    medianMarker.longitude /= inRegion.length
+    return (
+      <MapView.Marker
+        key={id}
+        coordinate={medianMarker}
+      >
+        <Text style={styles.markerGroup}>{inRegion.length}</Text>
+      </MapView.Marker>
+    )
+  }
+
+  getMarker = (stationsList) => {
+    if (!stationsList) return []
+    const {region} = this.state
+    const inRegion = stationsList.filter((station) => this.isInRegion(station, region))
+    if ((region.latitudeDelta > 0.015 || region.longitudeDelta > 0.015) && inRegion.length > 25) {
+      const simplified = []
+      let i = 0;
+      for (let la = region.latitude - region.latitudeDelta / 2 + (region.latitudeDelta / 6);
+        la < region.latitude + region.latitudeDelta / 2;
+        la += region.latitudeDelta / 3) {
+          for (let lo = region.longitude - region.longitudeDelta / 2 + (region.longitudeDelta / 6);
+            lo < region.longitude + region.longitudeDelta / 2;
+            lo += region.longitudeDelta / 3) {
+            simplified[i] = inRegion.filter((station) => this.isInRegion(station, {latitude: la, longitude: lo, latitudeDelta: region.latitudeDelta / 3, longitudeDelta: region.longitudeDelta / 3}))
+            i++
+          }
+        }
+      return simplified.map((region, id) => this.getMedianMarker(region, id))
+    } else {
+      return inRegion.map((station, id) => (
+        <MapView.Marker
+          ref={(elem) => (this.marker[station.number] = elem)}
+          key={id}
+          coordinate={station}
+          pinColor={this.props.followedStations[station.number] ? "green" : "red"}
+          onPress={() => {
+            this.props.loadRealTimeInfo(station.number)
+            this.setState({displayPopup: true, popupStation: station})
+          }}
+        />
+      ))
+    }
+  }
+
   render() {
     return (
         <View style={{flex: 1}} onLayout={({nativeEvent: {layout}}) =>
@@ -55,19 +121,12 @@ class MapStations extends Component {
               latitudeDelta: 0.16756966830353548,
               longitudeDelta: 0.20409498363733292,
             }}
+            onRegionChangeComplete={(region) => this.setState({region: region})}
           >
-          {(this.props.stationList) ? this.props.stationList.map((station, id) => (
-            <MapView.Marker
-              ref={(elem) => (this.marker[station.number] = elem)}
-              key={id}
-              coordinate={station}
-              pinColor={this.props.followedStations[station.number] ? "green" : "red"}
-              onPress={() => this.setState({displayPopup: true, popupStation: station})}
-            />
-          )) : null}
-        </MapView>
+            {this.getMarker(this.props.stationList)}
+          </MapView>
           <Popover
-          placement="top"
+            placement="top"
             isVisible={this.state.displayPopup}
             fromRect={this.popupRect}
             onClose={() => this.setState({displayPopup: false})}
@@ -91,6 +150,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  markerGroup: {
+    borderRadius: 10,
+    width: 25,
+    height: 25,
+    backgroundColor: "#ef6c00",
+    textAlign: 'center',
+    textAlignVertical: "center",
+    fontWeight: 'bold',
+    color: "white",
   },
 });
  export default MapStations

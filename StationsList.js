@@ -69,6 +69,7 @@ class StationsList extends Component {
           for (let i = 0; i < res.length; i++) {
             if (station.number === res[i].number) {
               followedStations[station.number] = true
+              this.loadRealTimeInfo(station.number)
             }
           }
           if (!followedStations[station.number]) {
@@ -287,8 +288,3 @@ const styles = StyleSheet.create({
   }
 });
  export default StationsList
-
-
-//TODO
-//Grouper les marker sur la map (trouver ceux qui sont dans la region, les packer)
-//on click on station de la map: ouvrir un modal avec StationAvialablesBikes
