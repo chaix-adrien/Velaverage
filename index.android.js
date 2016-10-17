@@ -53,7 +53,7 @@ class Velaverage extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <StationsList />
+        <GraphicsView />
       </View>
     );
   }
