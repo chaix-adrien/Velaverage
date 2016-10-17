@@ -238,7 +238,7 @@ class StationsList extends Component {
           />
         </View>
         <View style={{flexDirection: "row", elevation: 5, backgroundColor: "#F5FCFF"}}>
-          <SegmentedControlTab values={['List', 'Map']}
+          <SegmentedControlTab values={['Map', 'List']}
             borderRadius={3}
             tabsContainerStyle={{height: 40, width: 200, padding: 5}}
             tabStyle={{backgroundColor: 'white', borderWidth: 3, borderColor: '#ef6c00'}}
@@ -258,8 +258,6 @@ class StationsList extends Component {
         </View>
         <View  style={{flex: 1}}>
         {(this.state.displayMode === 0) ?
-          this.displayList(dataSearch)
-          :
           <MapStations
             un_followStation={this.un_followStation}
             followedStations={this.state.followedStations}
@@ -267,6 +265,8 @@ class StationsList extends Component {
             loadRealTimeInfo={this.loadRealTimeInfo}
             realTimeInfo={this.state.realTimeInfo}
           />
+          :
+          this.displayList(dataSearch)
         }
         </View>
       </View>

@@ -121,6 +121,7 @@ class MapStations extends Component {
               latitudeDelta: 0.16756966830353548,
               longitudeDelta: 0.20409498363733292,
             }}
+            showsUserLocation={true}
             onRegionChangeComplete={(region) => this.setState({region: region})}
           >
             {this.getMarker(this.props.stationList)}
@@ -153,8 +154,8 @@ const styles = StyleSheet.create({
   },
   markerGroup: {
     borderRadius: 10,
-    width: 25,
-    height: 25,
+    width: 27,
+    height: 27,
     backgroundColor: "#ef6c00",
     textAlign: 'center',
     textAlignVertical: "center",
