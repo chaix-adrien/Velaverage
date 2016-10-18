@@ -74,6 +74,22 @@ class MapStations extends Component {
     )
   }
 
+  getNormalMarker = (station, id) => {
+    if (!station) return null
+    return (
+      <MapView.Marker
+        ref={(elem) => (this.marker[station.number] = elem)}
+        key={id}
+        coordinate={station}
+        pinColor={this.props.followedStations[station.number] ? "green" : "red"}
+        onPress={() => {
+          this.props.loadRealTimeInfo(station.number)
+          this.setState({displayPopup: true, popupStation: station})
+        }}
+      />
+    )
+  }
+
   getMarker = (stationsList) => {
     if (!stationsList) return []
     const {region} = this.state
@@ -93,18 +109,7 @@ class MapStations extends Component {
         }
       return simplified.map((region, id) => this.getMedianMarker(region, id))
     } else {
-      return inRegion.map((station, id) => (
-        <MapView.Marker
-          ref={(elem) => (this.marker[station.number] = elem)}
-          key={id}
-          coordinate={station}
-          pinColor={this.props.followedStations[station.number] ? "green" : "red"}
-          onPress={() => {
-            this.props.loadRealTimeInfo(station.number)
-            this.setState({displayPopup: true, popupStation: station})
-          }}
-        />
-      ))
+      return inRegion.map((station, id) => this.getNormalMarker(station, id))
     }
   }
 
@@ -153,14 +158,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   markerGroup: {
-    borderRadius: 10,
-    width: 27,
+    borderRadius: 5,
+    width: 30,
     height: 27,
     backgroundColor: "#ef6c00",
     textAlign: 'center',
     textAlignVertical: "center",
     fontWeight: 'bold',
     color: "white",
+    borderWidth: 1,
+    borderColor: "black",
   },
 });
  export default MapStations

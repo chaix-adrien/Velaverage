@@ -139,6 +139,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-material-kit')
     compile project(':react-native-vector-icons')
     compile project(':react-native-mp-android-chart')
     compile project(':react-native-maps')

@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import SearchBar from 'react-native-material-design-searchbar'
-import CheckBox from 'react-native-check-box'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SegmentedControlTab from 'react-native-segmented-control-tab'
+import * as Animatable from 'react-native-animatable';
 
 import MapStations from './MapStations'
 
@@ -29,6 +29,8 @@ import MapStations from './MapStations'
 export class StationAvialablesBikes extends Component {
   constructor(props) {
     super(props)
+    this.state = {
+    }
   }
 
   percent_to_color = (percent) => {
@@ -69,16 +71,20 @@ class StationsListElement extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      realTimeInfo: null
+      realTimeInfo: null,
     }
   }
 
   render() {
     const {station, realTimeInfo, flexDirection} = this.props
     return (
-      <TouchableOpacity
-        onPress={() => {this.props.loadRealTimeInfo(station.number)}}
-        style={{flexDirection: flexDirection, flex: 1, justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderColor: "grey"}}
+      <TouchableOpacity onPress={() => {
+          this.view.transitionTo({height: 0})
+          this.props.loadRealTimeInfo(station.number, () => {console.log("retour"); this.view.transitionTo({height: 40})})
+        }}>
+      <Animatable.View
+        ref={(e => (this.view = e))}
+        style={{flexDirection: flexDirection, flex: 1, height: (flexDirection === "row") ? 40 : null, justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderColor: "grey"}}
       >
         <View>
           <Text style={[styles.stationName, {textAlign: (flexDirection === "row") ? "left" : "center"}]}>{station.name.slice(7)}</Text>
@@ -94,10 +100,11 @@ class StationsListElement extends Component {
             name={this.props.followed ? "minus-circle" : "plus-circle"}
             size={40}
             color={this.props.followed ? "red" : "green"}
-            style={{marginLeft: 10, marginRight: 5, marginBottom: (flexDirection === "row") ? 0 : 5}}
+            style={{marginRight: 5, marginLeft: 5, marginBottom: (flexDirection === "row") ? 0 : 5}}
           />
           </TouchableOpacity>
          </View>
+      </Animatable.View>
       </TouchableOpacity>
     )
   }

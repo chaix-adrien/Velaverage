@@ -8,13 +8,16 @@
   "dependencies": {
     "react": "15.3.2",
     "react-native": "0.34.1",
-    "react-native-check-box": "^1.0.0",
+    "react-native-animatable": "^0.6.1",
     "react-native-fs": "^2.0.1-rc.2",
     "react-native-loading-spinner-overlay": "^0.3.0",
     "react-native-maps": "^0.10.1",
     "react-native-material-design-searchbar": "^1.0.11",
+    "react-native-material-kit": "^0.3.3",
+    "react-native-material-switch": "github:recr0ns/react-native-material-switch",
     "react-native-mp-android-chart": "^0.1.1",
     "react-native-popover": "git+https://github.com/jeanregisser/react-native-popover.git",
+    "react-native-scrollable-tab-view": "skv-headless/react-native-scrollable-tab-view.git",
     "react-native-segmented-control-tab": "^2.0.1",
     "react-native-vector-icons": "^2.1.0"
   }

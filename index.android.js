@@ -18,7 +18,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import RNFS from 'react-native-fs'
-
+import ScrollableTabView from 'react-native-scrollable-tab-view'
 import {StationAverageGraph} from './StationAverageGraph.js'
 import GraphicsView from './GraphicsView'
 import MapView from 'react-native-maps';
@@ -46,14 +46,35 @@ export const days_color = [
 class Velaverage extends Component {
   constructor(props) {
     super(props)
+    this.state = {
+      followedStations: [],
+    }
+
+    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
+      if (!res) {
+        res = "[]"
+        AsyncStorage.setItem('@Velaverage:followedStations', res)
+      }
+      this.setState({followedStations: JSON.parse(res)})
+    })
   }
 
-
+  setFollowedStation = (followedStations) => {
+    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(followedStations))
+    this.setState({followedStations: followedStations})
+  }
 
   render() {
     return (
       <View style={styles.container}>
-        <GraphicsView />
+        <ScrollableTabView
+          tabBarUnderlineStyle={{backgroundColor: '#ef6c00'}}
+          tabBarActiveTextColor="#e65100"
+          locked={true}
+        >
+          <GraphicsView followedStations={this.state.followedStations} setFollowedStation={this.setFollowedStation} tabLabel="Graphics" />
+          <StationsList followedStations={this.state.followedStations} setFollowedStation={this.setFollowedStation} tabLabel="Stations" />
+        </ScrollableTabView>
       </View>
     );
   }

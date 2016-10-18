@@ -20,11 +20,10 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import SearchBar from 'react-native-material-design-searchbar'
-import CheckBox from 'react-native-check-box'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import SegmentedControlTab from 'react-native-segmented-control-tab'
 import StationsListElement from './StationsListElement'
-
+import {MKSwitch} from 'react-native-material-kit';
 import MapStations from './MapStations'
 
 class StationsList extends Component {
@@ -39,45 +38,20 @@ class StationsList extends Component {
       query: "",
     }
     this.load_station_data().then((stations) => {
-      AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-        if (!res) {
-          res = [{
-            number: 111,
-            name: '00111 - MINIMES PASSERELLE',
-            order: 0,
-          },{
-            number: 122,
-            name: '00122 - PASSERELLE HAEDENS',
-            order: 1,
-          },{
-            number: 106,
-            name: '00106 - BRIENNE PASSERELLE',
-            order: 2,
-          },{
-            number: 265,
-            name: '00265 - PASSAGE BORDELONGUE',
-            order: 3,
+      this.stationsList = stations
+      const followedStations = []
+      stations.forEach((station, id) => {
+        for (let i = 0; i < this.props.followedStations.length; i++) {
+          if (station.number === this.props.followedStations[i].number) {
+            followedStations[station.number] = true
+            this.loadRealTimeInfo(station.number)
           }
-          ]
-          AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(res))
-        } else {
-          res = JSON.parse(res)
         }
-        this.stationsList = stations
-        const followedStations = []
-        stations.forEach((station, id) => {
-          for (let i = 0; i < res.length; i++) {
-            if (station.number === res[i].number) {
-              followedStations[station.number] = true
-              this.loadRealTimeInfo(station.number)
-            }
-          }
-          if (!followedStations[station.number]) {
-            followedStations[station.number] = false
-          }
-        })
-        this.setState({activeStationList: stations, followedStations: followedStations})
+        if (!followedStations[station.number]) {
+          followedStations[station.number] = false
+        }
       })
+      this.setState({activeStationList: stations, followedStations: followedStations})
     })
   }
 
@@ -110,79 +84,52 @@ class StationsList extends Component {
 
 
   loadOnlyFollowedStation = (callback) => {
-    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-      if (!res) {
-        res = [{
-          number: 111,
-          name: '00111 - MINIMES PASSERELLE',
-          order: 0,
-        },{
-          number: 122,
-          name: '00122 - PASSERELLE HAEDENS',
-          order: 1,
-        },{
-          number: 106,
-          name: '00106 - BRIENNE PASSERELLE',
-          order: 2,
-        },{
-          number: 265,
-          name: '00265 - PASSAGE BORDELONGUE',
-          order: 3,
-        }
-        ]
-        AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(res))
-      } else {
-        res = JSON.parse(res)
-      }
-      const toDisplayList = []
-      for (let i = 0; i < res.length; i++) {
-        for (let j = 0; j < this.stationsList.length; j++) {
-          if (res[i].number === this.stationsList[j].number){
-            toDisplayList.push(this.stationsList[j])
-          }
+    const toDisplayList = []
+    for (let i = 0; i < this.props.followedStations.length; i++) {
+      for (let j = 0; j < this.stationsList.length; j++) {
+        if (this.props.followedStations[i].number === this.stationsList[j].number){
+          toDisplayList.push(this.stationsList[j])
         }
       }
-      this.setState({activeStationList:toDisplayList}, (callback) ? () => callback() : () => {})
-    })
+    }
+    this.setState({activeStationList:toDisplayList}, (callback) ? () => callback() : () => {})
   }
+
   getStation = (stations, by, value) => {
     return {...stations.filter((s) => s[by] === value)}['0']
   }
 
   un_followStation = (number) => {
-    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-      res = JSON.parse(res)
-      const station = this.getStation(res, "number", number)
-      let newFollowed = res.slice(0)
-      if (station) {
-        newFollowed = newFollowed.slice(0, res.indexOf(station)).concat(newFollowed.slice(res.indexOf(station) + 1))
-        newFollowed.sort((a, b) => a.order - b.order)
-        newFollowed.forEach((station, id) => (station.order = id))
-      } else {
-        let order = 0
-        res.forEach((station) => {
-          if (station.order > order) order = station.order
-        })
-        newFollowed.push({
-          number: number,
-          name:  this.getStation(this.stationsList, "number", number).name,
-          order: order + 1
-        })
-      }
-      AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(newFollowed))
-      const followedStations = []
-      this.stationsList.forEach((station, id) => {
-        for (let i = 0; i < newFollowed.length; i++) {
-          if (station.number === newFollowed[i].number) {
-            followedStations[station.number] = true
-          }
-        }
-        if (!followedStations[station.number]) {
-          followedStations[station.number] = false
-        }
+    let newFollowed = this.props.followedStations.slice(0)
+    const station = this.getStation(newFollowed, "number", number)
+    if (station) {
+      newFollowed = newFollowed.slice(0, newFollowed.indexOf(station)).concat(newFollowed.slice(newFollowed.indexOf(station) + 1))
+      newFollowed.sort((a, b) => a.order - b.order)
+      newFollowed.forEach((station, id) => (station.order = id))
+    } else {
+      let order = -1
+      this.props.followedStations.forEach((station) => {
+        if (station.order > order) order = station.order
       })
-      this.setState({followedStations: followedStations})
+      newFollowed.push({
+        number: number,
+        name:  this.getStation(this.stationsList, "number", number).name.slice(7),
+        order: order + 1
+      })
+    }
+    this.props.setFollowedStation(newFollowed)
+    const followedStations = []
+    this.stationsList.forEach((station, id) => {
+      for (let i = 0; i < newFollowed.length; i++) {
+        if (station.number === newFollowed[i].number) {
+          followedStations[station.number] = true
+        }
+      }
+      if (!followedStations[station.number]) {
+        followedStations[station.number] = false
+      }
     })
+    this.setState({followedStations: followedStations})
   }
 
   pressOnOnlyFollowed = (callback) => {
@@ -234,6 +181,7 @@ class StationsList extends Component {
             placeholder={'Search station...'}
             autoCorrect={false}
             padding={5}
+            iconSize={20}
             returnKeyType={'search'}
           />
         </View>
@@ -249,12 +197,21 @@ class StationsList extends Component {
               this.setState({displayMode: selec})
             }}
           />
-          <CheckBox
-            style={{flex: 1, padding: 10}}
-            onClick={() => this.pressOnOnlyFollowed()}
-            isChecked={this.state.onlyFollowed}
-            leftText={"Only Followed"}
-          />
+          <View style={{flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center"}} >
+            <Text>Only Followed</Text>
+            <View style={{left: -5, top: -10, height: 40}}>
+              <MKSwitch style={styles.appleSwitch}
+                checked={this.state.onlyFollowed}
+                trackSize={20}
+                trackLength={50}
+                onColor="rgba(255,152,0,.3)"
+                thumbOnColor='#ef6c00'
+                thumbRadius={15}
+                rippleColor="rgba(255,152,0,.2)"
+                onCheckedChange={(e) => this.pressOnOnlyFollowed()}
+              />
+            </View>
+          </View>
         </View>
         <View  style={{flex: 1}}>
         {(this.state.displayMode === 0) ?
@@ -273,6 +230,15 @@ class StationsList extends Component {
     );
   }
 }
+
+/*
+<CheckBox
+  style={{flex: 1, padding: 10}}
+  onClick={() => this.pressOnOnlyFollowed()}
+  isChecked={this.state.onlyFollowed}
+  leftText={"Only Followed"}
+/>
+*/
 
 const styles = StyleSheet.create({
   container: {

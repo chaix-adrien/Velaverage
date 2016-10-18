@@ -13,25 +13,8 @@ import {
 import RNFS from 'react-native-fs'
 import {LineChart} from 'react-native-mp-android-chart';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import {days_name, days_color} from './GraphicsView'
 
-const days_name = [
-  "Dim",
-  "Lun",
-  "Mar",
-  "Mer",
-  "Jeu",
-  "Ven",
-  "Sam",
-]
-const days_color = [
-  "#042423",
-  "red",
-  "blue",
-  "#64dd17",
-  "#FF00FF",
-  "#FF6600",
-  "#29b6f6",
-]
 const legend = {
   enabled: true,
   fontStyle: 1,

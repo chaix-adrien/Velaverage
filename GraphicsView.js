@@ -184,25 +184,25 @@ class GraphicsView extends Component {
   sortStationByOrder = (data) => {
     const out = []
     data.forEach((station) => {
-      out[this.getFollowedStation("number", station.number).order] = station
+      out[this.getFollowedStation(this.props.followedStations, "number", station.number).order] = station
     })
     return out
   }
 
   changeStationOrder = (number, side, callback) => {
-    const station = this.getFollowedStation("number", number)
+    const station = this.getFollowedStation(this.props.followedStations, "number", number)
     if (!side) {
       this.changeStationOrderCallback[station.order] = callback
       return
     }
-    if (station.order + side < 0 || station.order + side >= this.followedStations.length) return station.name
-    const stationToSwitch = this.getFollowedStation("order", station.order + side)
+    if (station.order + side < 0 || station.order + side >= this.props.followedStations.length) return station.name
+    const stationToSwitch = this.getFollowedStation(this.props.followedStations, "order", station.order + side)
     this.changeStationOrderCallback[station.order](false, stationToSwitch.name, callback)
     this.changeStationOrderCallback[stationToSwitch.order](true, station.name, callback)
     stationToSwitch.order = station.order
     station.order = station.order + side
     const newDatas = this.sortStationByOrder(this.state.datasRef)
-    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations), () => {
+    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.props.followedStations), () => {
       this.setState({datas: this.state.datas.cloneWithRows(newDatas)})
     })
     this.forceUpdate()
@@ -261,13 +261,14 @@ class GraphicsView extends Component {
     )
   }
 
-  getFollowedStation = (by, value) => { 
-    return {...this.followedStations.filter((s) => s[by] === value)}['0']
+  getFollowedStation = (stationList, by, value) => {
+    return {...stationList.filter((s) => s[by] === value)}['0']
   }
 
   changeStationName = (number, name) => {
-    this.getFollowedStation("number", number).name = name
-    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.followedStations))
+    const newFollowed = this.props.followedStations.slice(0)
+    this.getFollowedStation(newFollowed, "number", number).name = name
+    this.props.setFollowedStation(newFollowed)
     this.forceUpdate()
   }
 
@@ -296,7 +297,7 @@ class GraphicsView extends Component {
             return (
               <StationAverageGraph
                 changeStationName={this.changeStationName}
-                station_title={this.getFollowedStation("order", id - 1).name}
+                station_title={this.getFollowedStation(this.props.followedStations, "order", id - 1).name}
                 changeStationOrder={this.changeStationOrder}
                 station={station}
               />
@@ -359,4 +360,4 @@ export default GraphicsView
 //TODO
 //Check si retour de fetch OK
 //Metre tout les jours sur le graph
-//
+// de base, afficher que le jour d'aujourdhui
