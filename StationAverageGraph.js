@@ -11,6 +11,8 @@ import {
   AsyncStorage,
 } from 'react-native';
 import RNFS from 'react-native-fs'
+import PubSub from 'pubsub-js'
+
 import {LineChart} from 'react-native-mp-android-chart';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {days_name, days_color} from './GraphicsView'
@@ -43,13 +45,24 @@ export class StationAverageGraph extends Component {
       stationName: this.props.station_title,
       isInputFocused: false,
     }
-    this.props.changeStationOrder(this.props.station.number, null, this.changeOrder)
   }
 
-  changeOrder = (origin, newName, toEditable) => {
-    const state = {stationName: newName}
-    state.stationEditable = (origin) ? toEditable : false
-    this.setState(state)
+  componentWillMount() {
+    this.closeSub = PubSub.subscribe('CloseAllGraphEdit', (chan, strationEmmiter) => {
+      if (strationEmmiter !== this.props.station.number.toString()) {
+        this.setState({stationEditable: false, stationName: this.props.station_title})
+      }
+    })
+    this.openSub = PubSub.subscribe('OpenSpecificGraphEdit', (chan, toOpen) => {
+      if (toOpen === this.props.station.number.toString()) {
+        this.setState({stationEditable: true, stationName: this.props.station_title})
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    PubSub.unsubscribe(this.closeSub);
+    PubSub.unsubscribe(this.openSub);
   }
 
   render() {
@@ -80,7 +93,7 @@ export class StationAverageGraph extends Component {
                   color="#004d40"
                   style={{flex: 1, marginLeft: 5, marginRight: 5}}
                   onPress={() => {
-                    this.setState({stationName: this.props.changeStationOrder(station.number, -1, this.state.stationEditable)})
+                    this.props.changeStationOrder(station.number, -1, this.state.stationEditable)
                   }}
                 />
                 <Icon
@@ -88,7 +101,7 @@ export class StationAverageGraph extends Component {
                   size={30}
                   color="#004d40"
                   style={{flex: 1, marginLeft: 5, marginRight: 5}}
-                  onPress={() => this.setState({stationName: this.props.changeStationOrder(station.number, 1, this.state.stationEditable)})}
+                  onPress={() => this.props.changeStationOrder(station.number, 1, this.state.stationEditable)}
                 />
               </View>
               :
@@ -100,6 +113,7 @@ export class StationAverageGraph extends Component {
               color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
               style={{flex: 1}}
               onPress={() => {
+                this.props.closeAllEdit(station.number.toString())
                 this.setState({stationName: this.props.station_title, stationEditable: !this.state.stationEditable})
               }}
             />

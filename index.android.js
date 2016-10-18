@@ -129,10 +129,16 @@ const styles = StyleSheet.create({
 AppRegistry.registerComponent('Velaverage', () => Velaverage);
 
 
-//TODO: view station suivi / add station  (load station file, si pas en local et pas internet: message d'erreur)
+//TODO  
+//(load station file, si pas en local et pas internet: message d'erreur)
 //choix de la precision
-//choix du jours (par station ?)
-//field search station
-//personal station order
-//indicateur si toujour place / toujours velo / toujours les deux
 //tab Followed (par defaut) afficher les station avec un boutton refresh a chaques
+//Tab Search (station, date, heure) => sortir un grap 1h avant / apres
+
+/*
+Option:
+color theme
+list : display only followed de base ?
+tab at startup
+default day displayed par rapport a aujourdhui
+*/

@@ -19,6 +19,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import RNFS from 'react-native-fs'
+import PubSub from 'pubsub-js'
+
 
 import {StationAverageGraph} from './StationAverageGraph.js'
 
@@ -47,14 +49,16 @@ export const days_color = [
 class GraphicsView extends Component {
   constructor(props) {
     super(props)
+    let today = new Date(Date.now())
+    today = (today.getDay() + 6) % 7
     this.state = {
       datas: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
       refreshing: true,
-      activeDay: days_name.map(() => true),
+      activeDay: days_name.map((n, id) => (id === today || id === today + 1) ? true : false),
       datasRef: null,
       dragRefresh: false,
     }
-    this.changeStationOrderCallback = []
+    this.closeAllEditCallback = []
   }
 
   componentWillMount() {
@@ -65,7 +69,6 @@ class GraphicsView extends Component {
     if (nProps.followedStations !== this.props.followedStations && nProps) {
       this.state.refreshing = true
       this.onRefresh()
-      return true
     }
     return true
   }
@@ -144,7 +147,7 @@ class GraphicsView extends Component {
 
   load_data = (followedStations, time_start, time_end, scale, days) =>  {
     this.fetch_data(followedStations, time_start, time_end, scale, days).then((reps) => {
-      const out = reps.map((rep, id) => {
+      let out = reps.map((rep, id) => {
         const station = {
           title: followedStations[id].name,
           number: followedStations[id].number,
@@ -176,7 +179,8 @@ class GraphicsView extends Component {
         station.data.datasets = station.data.datasets.concat(this.get_now_dataset(station.data, station.available_bikes))
         return station
       })
-      const onlyActiveDay = this.keepOnlyActiveDay(out, this.state.activeDay)
+      out = this.sortStationByOrder(out)
+      let onlyActiveDay = this.keepOnlyActiveDay(out, this.state.activeDay)
       this.setState({refreshing: false, dragRefresh: false, datas: this.state.datas.cloneWithRows(onlyActiveDay), datasRef: out})
     })
   } 
@@ -194,22 +198,19 @@ class GraphicsView extends Component {
     return out
   }
 
-  changeStationOrder = (number, side, callback) => {
+  changeStationOrder = (number, side) => {
     const station = this.getFollowedStation(this.props.followedStations, "number", number)
-    if (!side) {
-      this.changeStationOrderCallback[station.order] = callback
-      return
-    }
     if (station.order + side < 0 || station.order + side >= this.props.followedStations.length) return station.name
     const stationToSwitch = this.getFollowedStation(this.props.followedStations, "order", station.order + side)
-    this.changeStationOrderCallback[station.order](false, stationToSwitch.name, callback)
-    this.changeStationOrderCallback[stationToSwitch.order](true, station.name, callback)
+    PubSub.publish('CloseAllGraphEdit', stationToSwitch.number.toString())
     stationToSwitch.order = station.order
     station.order = station.order + side
-    const newDatas = this.sortStationByOrder(this.state.datasRef)
+    let newDatas = this.sortStationByOrder(this.state.datasRef)
+    newDatas = this.keepOnlyActiveDay(newDatas, this.state.activeDay)
     AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.props.followedStations), () => {
       this.setState({datas: this.state.datas.cloneWithRows(newDatas)})
     })
+    PubSub.publish('OpenSpecificGraphEdit', station.number.toString())
     this.forceUpdate()
     return stationToSwitch.name
   }
@@ -306,8 +307,9 @@ class GraphicsView extends Component {
               <StationAverageGraph
                 changeStationName={this.changeStationName}
                 station_title={this.getFollowedStation(this.props.followedStations, "order", id - 1).name}
-                changeStationOrder={this.changeStationOrder}
                 station={station}
+                changeStationOrder={this.changeStationOrder}
+                closeAllEdit={(stationEmmiter) => PubSub.publish('CloseAllGraphEdit', stationEmmiter)}
               />
             )
           }}
