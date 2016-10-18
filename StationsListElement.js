@@ -43,7 +43,7 @@ export class StationAvialablesBikes extends Component {
   render() {
     const {station} = this.props
     return (
-     <View style={{flexDirection: "row"}}>
+     <View style={[{flexDirection: "row"}, (this.props.containerStyle) ? this.props.containerStyle : {}]}>
        <View>
          <Icon
           name="bicycle"

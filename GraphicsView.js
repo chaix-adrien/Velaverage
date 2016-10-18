@@ -149,6 +149,7 @@ class GraphicsView extends Component {
           title: followedStations[id].name,
           number: followedStations[id].number,
           bike_stands: rep.api.bike_stands,
+          available_bike_stands: rep.api.available_bike_stands,
           available_bikes: rep.api.available_bikes,
           data: {
             datasets: rep.customApi.days.map((day) => {

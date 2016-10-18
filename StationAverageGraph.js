@@ -14,6 +14,7 @@ import RNFS from 'react-native-fs'
 import {LineChart} from 'react-native-mp-android-chart';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {days_name, days_color} from './GraphicsView'
+import {StationAvialablesBikes} from './StationsListElement'
 
 const legend = {
   enabled: true,
@@ -91,7 +92,7 @@ export class StationAverageGraph extends Component {
                 />
               </View>
               :
-              <Text style={[styles.graphTitle, {flex: 2}]}>({station.available_bikes}/{station.bike_stands})</Text>
+             <StationAvialablesBikes station={station} containerStyle={{marginRight: 10, paddingTop: 5, padding: 3, backgroundColor: '#F5FCFF', elevation: 5, borderRadius: 1}} />
             }
             <Icon
               name={(this.state.stationEditable) ? "check-circle" : "gear"}

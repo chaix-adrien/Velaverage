@@ -135,3 +135,4 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 //field search station
 //personal station order
 //indicateur si toujour place / toujours velo / toujours les deux
+//tab Followed (par defaut) afficher les station avec un boutton refresh a chaques
