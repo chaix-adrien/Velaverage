@@ -52,11 +52,19 @@ class GraphicsView extends Component {
       activeDay: days_name.map(() => true),
       datasRef: null,
     }
-    AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
-      this.followedStations = JSON.parse(res)
-      this.load_data(this.followedStations, "00h00", "23h59", 30, 0)
-    })
     this.changeStationOrderCallback = []
+  }
+
+  componentWillMount() {
+    this.onRefresh()
+  }
+
+  shouldComponentUpdate(nProps) {
+    if (nProps.followedStations !== this.props.followedStations && nProps) {
+      this.onRefresh()
+      return false
+    }
+    return true
   }
 
   get_now_dataset = (sample, avialables_bikes) => {
@@ -107,7 +115,7 @@ class GraphicsView extends Component {
     station.data.datasets = station.data.datasets.concat(limitDataset)
   }
 
-  fetch_data = (followedStations, time_start, time_end, scale, day) =>  {
+  fetch_data = (followedStations, time_start, time_end, scale, days) =>  {
     return Promise.all(followedStations.map((followedStation) => {
       const header = {
         method: 'POST',
@@ -115,7 +123,7 @@ class GraphicsView extends Component {
           time_start: time_start,
           time_end: time_end,
           scale: scale,
-          day: day,
+          days: days,
         }),
       }
       return Promise.all([
@@ -131,8 +139,8 @@ class GraphicsView extends Component {
     )
   }
 
-  load_data = (followedStations, time_start, time_end, scale, day) =>  {
-    this.fetch_data(followedStations, time_start, time_end, scale, day).then((reps) => {
+  load_data = (followedStations, time_start, time_end, scale, days) =>  {
+    this.fetch_data(followedStations, time_start, time_end, scale, days).then((reps) => {
       const out = reps.map((rep, id) => {
         const station = {
           title: followedStations[id].name,
@@ -140,24 +148,24 @@ class GraphicsView extends Component {
           bike_stands: rep.api.bike_stands,
           available_bikes: rep.api.available_bikes,
           data: {
-            datasets: [
-              {
-                yValues: rep.customApi.map((value) => value.moy),
-                label: days_name[day],
-                config: {
-                  color: days_color[day],
-                  lineWidth: 2,
-                  drawValues: false,
-                  drawCircles: false,
-                  drawCubic: false,
-                  highlightColor: days_color[day],
-                  drawFilled: true,
-                  fillColor: days_color[day],
-                  fillAlpha: 0,
+            datasets: rep.customApi.days.map((day) => {
+              return {
+                  yValues: day.stats.map((stat) => stat.moy),
+                  label: days_name[day.day],
+                  config: {
+                    color: days_color[day.day],
+                    lineWidth: 2,
+                    drawValues: false,
+                    drawCircles: false,
+                    drawCubic: false,
+                    highlightColor: days_color[day.day],
+                    drawFilled: true,
+                    fillColor: days_color[day.day],
+                    fillAlpha: 0,
+                  }
                 }
-              }
-            ],
-            xValues: rep.customApi.map((value) => value.time),
+            }),
+            xValues: rep.customApi.time,
           }
         }
         this.manage_min_max(station)
@@ -169,7 +177,7 @@ class GraphicsView extends Component {
   } 
 
   onRefresh = () => {
-    this.setState({refreshing: true}, () => this.load_data(this.followedStations, "00h00", "23h59", 30, 0))
+    this.setState({refreshing: true}, () => this.load_data(this.props.followedStations, "00h00", "23h59", 30, [0, 1, 2 ,3 ,4 , 5, 6]))
   }
 
 
