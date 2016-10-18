@@ -16,6 +16,7 @@ import {
   Dimensions,
   AsyncStorage,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 
@@ -51,6 +52,7 @@ class GraphicsView extends Component {
       refreshing: true,
       activeDay: days_name.map(() => true),
       datasRef: null,
+      dragRefresh: false,
     }
     this.changeStationOrderCallback = []
   }
@@ -59,10 +61,11 @@ class GraphicsView extends Component {
     this.onRefresh()
   }
 
-  shouldComponentUpdate(nProps) {
+  shouldComponentUpdate(nProps, nState) {
     if (nProps.followedStations !== this.props.followedStations && nProps) {
+      this.state.refreshing = true
       this.onRefresh()
-      return false
+      return true
     }
     return true
   }
@@ -172,12 +175,12 @@ class GraphicsView extends Component {
         station.data.datasets = station.data.datasets.concat(this.get_now_dataset(station.data, station.available_bikes))
         return station
       })
-      this.setState({refreshing: false, datas: this.state.datas.cloneWithRows(out), datasRef: out})
+      this.setState({refreshing: false, dragRefresh: false, datas: this.state.datas.cloneWithRows(out), datasRef: out})
     })
   } 
 
   onRefresh = () => {
-    this.setState({refreshing: true}, () => this.load_data(this.props.followedStations, "00h00", "23h59", 30, [0, 1, 2 ,3 ,4 , 5, 6]))
+    this.setState({dragRefresh: true}, () => this.load_data(this.props.followedStations, "00h00", "23h59", 30, [0, 1, 2 ,3 ,4 , 5, 6]))
   }
 
 
@@ -275,17 +278,20 @@ class GraphicsView extends Component {
   render() {
     const refreshControl = (
       <RefreshControl
-        refreshing={this.state.refreshing}
+        refreshing={this.state.dragRefresh}
         onRefresh={() => this.onRefresh()}
       />
     )
     let listWithEmptyStart = this.state.datas.cloneWithRows([])
     if (this.state.datas._dataBlob) {
-      listWithEmptyStart = this.state.datas.cloneWithRows(["daySelector"].concat(this.state.datas._dataBlob.s1))
+      if (this.state.datas._dataBlob.s1.length) {
+        listWithEmptyStart = this.state.datas.cloneWithRows(["daySelector"].concat(this.state.datas._dataBlob.s1))
+      }
     }
     return (
       <View style={styles.container}>
-        <ListView
+        {(!this.state.refreshing || this.state.dragRefresh) ?
+          <ListView
           style={{flex: 1}}
           dataSource={listWithEmptyStart}
           enableEmptySections={true}
@@ -304,6 +310,8 @@ class GraphicsView extends Component {
             )
           }}
         />
+        : <ActivityIndicator animating={this.state.refreshing} size="large" />
+        }
       </View>
     );
   }
@@ -359,5 +367,6 @@ export default GraphicsView
 
 //TODO
 //Check si retour de fetch OK
-//Metre tout les jours sur le graph
 // de base, afficher que le jour d'aujourdhui
+//spinner au chargement des graph
+//ordre des graphiques
