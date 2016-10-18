@@ -39,7 +39,7 @@ export const days_color = [
   "blue",
   "#64dd17",
   "#FF00FF",
-  "#FF6600",
+  "#ffab00",
   "#29b6f6",
   "#042423",
 ]
@@ -176,7 +176,8 @@ class GraphicsView extends Component {
         station.data.datasets = station.data.datasets.concat(this.get_now_dataset(station.data, station.available_bikes))
         return station
       })
-      this.setState({refreshing: false, dragRefresh: false, datas: this.state.datas.cloneWithRows(out), datasRef: out})
+      const onlyActiveDay = this.keepOnlyActiveDay(out, this.state.activeDay)
+      this.setState({refreshing: false, dragRefresh: false, datas: this.state.datas.cloneWithRows(onlyActiveDay), datasRef: out})
     })
   } 
 
@@ -230,7 +231,7 @@ class GraphicsView extends Component {
 
   manageActiveDay = (id) => {
     let newActiveDay = this.state.activeDay.slice(0)
-    if (!id || this.state.activeDay.every((day, idday) => (idday === id) ? true : !day)) {
+    if (id === null || this.state.activeDay.every((day, idday) => (idday === id) ? true : !day)) {
           newActiveDay = days_name.map(() => true)
     } else if (this.state.activeDay.every((day) => day)) {
       newActiveDay = days_name.map(() => false)
@@ -369,5 +370,4 @@ export default GraphicsView
 //TODO
 //Check si retour de fetch OK
 // de base, afficher que le jour d'aujourdhui
-//spinner au chargement des graph
 //ordre des graphiques

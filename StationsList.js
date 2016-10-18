@@ -231,15 +231,6 @@ class StationsList extends Component {
   }
 }
 
-/*
-<CheckBox
-  style={{flex: 1, padding: 10}}
-  onClick={() => this.pressOnOnlyFollowed()}
-  isChecked={this.state.onlyFollowed}
-  leftText={"Only Followed"}
-/>
-*/
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

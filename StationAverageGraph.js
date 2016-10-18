@@ -92,7 +92,7 @@ export class StationAverageGraph extends Component {
                 />
               </View>
               :
-             <StationAvialablesBikes station={station} containerStyle={{marginRight: 10, paddingTop: 5, padding: 3, backgroundColor: '#F5FCFF', elevation: 5, borderRadius: 1}} />
+             <StationAvialablesBikes station={station} containerStyle={{marginRight: 10, paddingTop: 5, padding: 3, backgroundColor: '#F5FCFF', elevation: 5, borderRadius: 4}} />
             }
             <Icon
               name={(this.state.stationEditable) ? "check-circle" : "gear"}
