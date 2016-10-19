@@ -6,23 +6,19 @@
 
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
-  Text,
   View,
   RefreshControl,
   ListView,
-  TextInput,
-  Dimensions,
   AsyncStorage,
   TouchableOpacity,
   ActivityIndicator,
+  Text,
 } from 'react-native';
-import RNFS from 'react-native-fs'
 import PubSub from 'pubsub-js'
 
-
 import {StationAverageGraph} from './StationAverageGraph.js'
+import colors from '../colors.json'
 
 const apiKey = "0c707a2d7a2e439fca48906a35c3f8c45efb5bc9"
 
@@ -35,15 +31,6 @@ export const days_name = [
   "Ven",
   "Sam",
   "Dim",
-]
-export const days_color = [
-  "red",
-  "blue",
-  "#64dd17",
-  "#FF00FF",
-  "#ffab00",
-  "#29b6f6",
-  "#042423",
 ]
 
 class GraphicsView extends Component {
@@ -98,7 +85,7 @@ class GraphicsView extends Component {
         drawCircles: true,
         highlightColor: "yellow",
         circleRadius: 10,
-        circleColor: days_color[(today.getDay() + 6) % 7],
+        circleColor: colors.days_color[(today.getDay() + 6) % 7],
         circleColorHole: "#F8F8F8",
         drawFilled: true,
         fillColor: "yellow",
@@ -160,14 +147,14 @@ class GraphicsView extends Component {
                   yValues: day.stats.map((stat) => stat.moy),
                   label: days_name[day.day],
                   config: {
-                    color: days_color[day.day],
+                    color: colors.days_color[day.day],
                     lineWidth: 2,
                     drawValues: false,
                     drawCircles: false,
                     drawCubic: false,
-                    highlightColor: days_color[day.day],
+                    highlightColor: colors.days_color[day.day],
                     drawFilled: true,
-                    fillColor: days_color[day.day],
+                    fillColor: colors.days_color[day.day],
                     fillAlpha: 0,
                   }
                 }
@@ -257,7 +244,7 @@ class GraphicsView extends Component {
             onLongPress={() => this.manageActiveDay(null)}
           >
             <Text
-              style={[styles.daySelectorText, {backgroundColor: days_color[id], opacity: (this.state.activeDay[id]) ? 1 : 0.5}]}
+              style={[styles.daySelectorText, {backgroundColor: colors.days_color[id], opacity: (this.state.activeDay[id]) ? 1 : 0.5}]}
             >
               {days_name[id]}
             </Text>
@@ -326,25 +313,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  graphTitle: {
-    color: "black",
-    marginLeft: 5,
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    height: 40,
+    backgroundColor: colors.background,
   },
   daySelectorContainer: {
     height: 40,

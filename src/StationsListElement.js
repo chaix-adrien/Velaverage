@@ -6,25 +6,14 @@
 
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
   Text,
   View,
-  RefreshControl,
-  ListView,
-  TextInput,
-  Dimensions,
-  AsyncStorage,
   TouchableOpacity,
 } from 'react-native';
-import RNFS from 'react-native-fs'
-import SearchBar from 'react-native-material-design-searchbar'
 import Icon from 'react-native-vector-icons/FontAwesome';
-import SegmentedControlTab from 'react-native-segmented-control-tab'
 import * as Animatable from 'react-native-animatable';
-
-import MapStations from './MapStations'
-
+import colors from '../colors.json'
 
 export class StationAvialablesBikes extends Component {
   constructor(props) {
@@ -35,7 +24,7 @@ export class StationAvialablesBikes extends Component {
 
   percent_to_color = (percent) => {
     if (percent > 0.5) return "green"
-    else if (percent > 0.3) return '#ef6c00'
+    else if (percent > 0.3) return colors.main
     else if (percent != 0) return "red"
     else return "black"
   }

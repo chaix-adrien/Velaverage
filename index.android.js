@@ -19,10 +19,10 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import ScrollableTabView from 'react-native-scrollable-tab-view'
-import {StationAverageGraph} from './StationAverageGraph.js'
-import GraphicsView from './GraphicsView'
+import {StationAverageGraph} from './src/StationAverageGraph.js'
+import GraphicsView from './src/GraphicsView'
 import MapView from 'react-native-maps';
-import StationsList from './StationsList'
+import StationsList from './src/StationsList'
 export const dataPath = "/sdcard/station.data"
 export const days_name = [
   "Dim",

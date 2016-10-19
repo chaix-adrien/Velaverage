@@ -1,22 +1,16 @@
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
-  Text,
   View,
-  RefreshControl,
-  ListView,
   TextInput,
-  TouchableOpacity,
-  AsyncStorage,
 } from 'react-native';
-import RNFS from 'react-native-fs'
 import PubSub from 'pubsub-js'
-
 import {LineChart} from 'react-native-mp-android-chart';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {days_name, days_color} from './GraphicsView'
+
 import {StationAvialablesBikes} from './StationsListElement'
+import {days_name} from './GraphicsView'
+import colors from '../colors.json'
 
 const legend = {
   enabled: true,
@@ -32,7 +26,7 @@ const legend = {
   wordWrapEnabled: true,
   maxSizePercent: 0.5,
   custom: {
-    colors: days_color,
+    colors: colors.days_color,
     labels: days_name,
   }
 }
@@ -105,12 +99,12 @@ export class StationAverageGraph extends Component {
                 />
               </View>
               :
-             <StationAvialablesBikes station={station} containerStyle={{marginRight: 10, paddingTop: 5, padding: 3, backgroundColor: '#F5FCFF', elevation: 5, borderRadius: 4}} />
+             <StationAvialablesBikes station={station} containerStyle={{marginRight: 10, paddingTop: 5, padding: 3, backgroundColor: colors.background, elevation: 5, borderRadius: 4}} />
             }
             <Icon
               name={(this.state.stationEditable) ? "check-circle" : "gear"}
               size={30}
-              color={(station.status === 'OPEN') ? "#2E7D32" : "#BF360C"}
+              color={"#BF360C"}
               style={{flex: 1}}
               onPress={() => {
                 this.props.closeAllEdit(station.number.toString())

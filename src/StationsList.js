@@ -6,25 +6,22 @@
 
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
   Text,
   View,
   RefreshControl,
   ListView,
-  TextInput,
   Dimensions,
-  AsyncStorage,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import SearchBar from 'react-native-material-design-searchbar'
-import Icon from 'react-native-vector-icons/FontAwesome';
 import SegmentedControlTab from 'react-native-segmented-control-tab'
-import StationsListElement from './StationsListElement'
 import {MKSwitch} from 'react-native-material-kit';
+
+import StationsListElement from './StationsListElement'
 import MapStations from './MapStations'
+import colors from '../colors.json'
 
 class StationsList extends Component {
   constructor(props) {
@@ -174,7 +171,7 @@ class StationsList extends Component {
     }) : this.state.activeStationList
     return (
       <View style={styles.container}>
-        <View style={{width:Dimensions.get('window').width, elevation: 5, backgroundColor: "#F5FCFF"}}>
+        <View style={{width:Dimensions.get('window').width, elevation: 5, backgroundColor: colors.background}}>
           <SearchBar
             onSearchChange={(event) => this.setState({query: event.nativeEvent.text})}
             height={30}
@@ -185,13 +182,13 @@ class StationsList extends Component {
             returnKeyType={'search'}
           />
         </View>
-        <View style={{flexDirection: "row", elevation: 5, backgroundColor: "#F5FCFF"}}>
+        <View style={{flexDirection: "row", elevation: 5, backgroundColor: colors.background}}>
           <SegmentedControlTab values={['Map', 'List']}
             borderRadius={3}
             tabsContainerStyle={{height: 40, width: 200, padding: 5}}
-            tabStyle={{backgroundColor: 'white', borderWidth: 3, borderColor: '#ef6c00'}}
-            activeTabStyle={{backgroundColor: '#ef6c00'}}
-            tabTextStyle={{color: '#ef6c00', fontWeight: 'bold'}}
+            tabStyle={{backgroundColor: 'white', borderWidth: 3, borderColor: colors.main}}
+            activeTabStyle={{backgroundColor: colors.main}}
+            tabTextStyle={{color: colors.main, fontWeight: 'bold'}}
             activeTabTextStyle={{color: 'white'}}
             onTabPress={(selec) => {
               this.setState({displayMode: selec})
@@ -205,7 +202,7 @@ class StationsList extends Component {
                 trackSize={20}
                 trackLength={50}
                 onColor="rgba(255,152,0,.3)"
-                thumbOnColor='#ef6c00'
+                thumbOnColor={colors.main}
                 thumbRadius={15}
                 rippleColor="rgba(255,152,0,.2)"
                 onCheckedChange={(e) => this.pressOnOnlyFollowed()}
@@ -236,12 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: colors.background,
   },
-  stationName: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: "bold",
-  }
 });
  export default StationsList

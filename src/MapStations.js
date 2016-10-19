@@ -6,25 +6,16 @@
 
 import React, { Component } from 'react';
 import {
-  AppRegistry,
   StyleSheet,
   Text,
   View,
-  RefreshControl,
-  ListView,
-  TextInput,
   Dimensions,
-  AsyncStorage,
-  TouchableOpacity,
-  Alert,
 } from 'react-native';
-var UIManager = require('NativeModules').UIManager;
-import RNFS from 'react-native-fs'
-import Spinner from 'react-native-loading-spinner-overlay';
-import StationsListElement from './StationsListElement'
+import MapView from 'react-native-maps';
 import Popover from 'react-native-popover'
 
-import MapView from 'react-native-maps';
+import StationsListElement from './StationsListElement'
+import colors from '../colors.json'
 
 class MapStations extends Component {
   constructor(props) {
@@ -152,16 +143,11 @@ class MapStations extends Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
   markerGroup: {
     borderRadius: 5,
     width: 30,
     height: 27,
-    backgroundColor: "#ef6c00",
+    backgroundColor: colors.main,
     textAlign: 'center',
     textAlignVertical: "center",
     fontWeight: 'bold',
