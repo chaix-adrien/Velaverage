@@ -110,7 +110,7 @@ class StationsList extends Component {
       })
       newFollowed.push({
         number: number,
-        name:  this.getStation(this.stationsList, "number", number).name.slice(7),
+        name:  this.getStation(this.stationsList, "number", number).name.slice(8),
         order: order + 1
       })
     }
@@ -146,8 +146,8 @@ class StationsList extends Component {
       <ListView
         style={{width: Dimensions.get("window").width}}
         dataSource={listData.cloneWithRows(list.sort((a, b) => {
-          const textA = a.name.slice(7).toUpperCase();
-          const textB = b.name.slice(7).toUpperCase();
+          const textA = a.name.slice(8).toUpperCase();
+          const textB = b.name.slice(8).toUpperCase();
           return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
         }))}
         enableEmptySections={true}

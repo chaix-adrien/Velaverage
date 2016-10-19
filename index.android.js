@@ -19,10 +19,13 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs'
 import ScrollableTabView from 'react-native-scrollable-tab-view'
-import {StationAverageGraph} from './src/StationAverageGraph.js'
-import GraphicsView from './src/GraphicsView'
 import MapView from 'react-native-maps';
+
+import GraphicsView from './src/GraphicsView'
 import StationsList from './src/StationsList'
+import FollowedList from './src/FollowedList'
+import {StationAverageGraph} from './src/StationAverageGraph.js'
+
 export const dataPath = "/sdcard/station.data"
 export const days_name = [
   "Dim",
@@ -43,25 +46,63 @@ export const days_color = [
   "#29b6f6",
 ]
 
+export const getFollowedStation = (stationList, by, value) => {
+  return {...stationList.filter((s) => s[by] === value)}['0']
+}
+
 class Velaverage extends Component {
   constructor(props) {
     super(props)
     this.state = {
       followedStations: [],
     }
-
+    this.onChangeTabCallback = []
+    this.lastTab = 0
     AsyncStorage.getItem('@Velaverage:followedStations', (err, res) => {
       if (!res) {
         res = "[]"
         AsyncStorage.setItem('@Velaverage:followedStations', res)
+        res = []
+      } else {
+        res = JSON.parse(res).sort((a, b) => a.order - b.order)
       }
-      this.setState({followedStations: JSON.parse(res)})
+      this.setState({followedStations: res})
     })
+  }
+
+  changeStationName = (number, name) => {
+    const newFollowed = this.state.followedStations.slice(0)
+    getFollowedStation(newFollowed, "number", number).name = name
+    this.setFollowedStation(newFollowed)
+    this.forceUpdate()
+  }
+
+  changeStationOrder = (number, side) => {
+    const station = getFollowedStation(this.state.followedStations, "number", number)
+    if (station.order + side < 0 || station.order + side >= this.state.followedStations.length) return false
+    const stationToSwitch = getFollowedStation(this.state.followedStations, "order", station.order + side)
+    stationToSwitch.order = station.order
+    station.order = station.order + side
+    const newDatas = this.state.followedStations.sort((a, b) => a.order - b.order)
+    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(newDatas), () => {
+      this.setState({followedStations: newDatas})
+    })
+    this.forceUpdate()
+    return true
   }
 
   setFollowedStation = (followedStations) => {
     AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(followedStations))
     this.setState({followedStations: followedStations})
+  }
+
+  onChangeTab = (id, callback) => {
+    if (callback) {
+      this.onChangeTabCallback[id] = callback
+    } else if (this.onChangeTabCallback[this.lastTab]) {
+      this.onChangeTabCallback[this.lastTab]()
+    }
+    this.lastTab = id
   }
 
   render() {
@@ -71,7 +112,13 @@ class Velaverage extends Component {
           tabBarUnderlineStyle={{backgroundColor: '#ef6c00'}}
           tabBarActiveTextColor="#e65100"
           locked={true}
+          onChangeTab={(tab) => this.onChangeTab(tab.i)}
         >
+          <FollowedList tabLabel="Followed"
+          followedStations={this.state.followedStations}
+          changeStationOrder={this.changeStationOrder}
+          changeStationName={this.changeStationName}
+          onChangeTab={this.onChangeTab} />
           <GraphicsView followedStations={this.state.followedStations} setFollowedStation={this.setFollowedStation} tabLabel="Graphics" />
           <StationsList followedStations={this.state.followedStations} setFollowedStation={this.setFollowedStation} tabLabel="Stations" />
         </ScrollableTabView>

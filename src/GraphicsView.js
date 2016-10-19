@@ -18,20 +18,14 @@ import {
 import PubSub from 'pubsub-js'
 
 import {StationAverageGraph} from './StationAverageGraph.js'
+import {getFollowedStation} from '../index.android.js'
 import colors from '../colors.json'
+import config from '../config.json'
 
-const apiKey = "0c707a2d7a2e439fca48906a35c3f8c45efb5bc9"
+export const apiKey = "0c707a2d7a2e439fca48906a35c3f8c45efb5bc9"
 
 export const dataPath = "/sdcard/station.data"
-export const days_name = [
-  "Lun",
-  "Mar",
-  "Mer",
-  "Jeu",
-  "Ven",
-  "Sam",
-  "Dim",
-]
+
 
 class GraphicsView extends Component {
   constructor(props) {
@@ -41,7 +35,7 @@ class GraphicsView extends Component {
     this.state = {
       datas: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
       refreshing: true,
-      activeDay: days_name.map((n, id) => (id === today || id === today + 1) ? true : false),
+      activeDay: config.days_name.map((n, id) => (id === today || id === today + 1) ? true : false),
       datasRef: null,
       dragRefresh: false,
     }
@@ -145,7 +139,7 @@ class GraphicsView extends Component {
             datasets: rep.customApi.days.map((day) => {
               return {
                   yValues: day.stats.map((stat) => stat.moy),
-                  label: days_name[day.day],
+                  label: config.days_name[day.day],
                   config: {
                     color: colors.days_color[day.day],
                     lineWidth: 2,
@@ -176,30 +170,12 @@ class GraphicsView extends Component {
     this.setState({dragRefresh: true}, () => this.load_data(this.props.followedStations, "00h00", "23h59", 30, [0, 1, 2 ,3 ,4 , 5, 6]))
   }
 
-
   sortStationByOrder = (data) => {
     const out = []
     data.forEach((station) => {
-      out[this.getFollowedStation(this.props.followedStations, "number", station.number).order] = station
+      out[getFollowedStation(this.props.followedStations, "number", station.number).order] = station
     })
     return out
-  }
-
-  changeStationOrder = (number, side) => {
-    const station = this.getFollowedStation(this.props.followedStations, "number", number)
-    if (station.order + side < 0 || station.order + side >= this.props.followedStations.length) return station.name
-    const stationToSwitch = this.getFollowedStation(this.props.followedStations, "order", station.order + side)
-    PubSub.publish('CloseAllGraphEdit', stationToSwitch.number.toString())
-    stationToSwitch.order = station.order
-    station.order = station.order + side
-    let newDatas = this.sortStationByOrder(this.state.datasRef)
-    newDatas = this.keepOnlyActiveDay(newDatas, this.state.activeDay)
-    AsyncStorage.setItem('@Velaverage:followedStations', JSON.stringify(this.props.followedStations), () => {
-      this.setState({datas: this.state.datas.cloneWithRows(newDatas)})
-    })
-    PubSub.publish('OpenSpecificGraphEdit', station.number.toString())
-    this.forceUpdate()
-    return stationToSwitch.name
   }
 
   keepOnlyActiveDay = (data, activeDay) => {
@@ -207,8 +183,8 @@ class GraphicsView extends Component {
     out = out.filter((station) => {
       if (station) {
         const newDatasets = station.data.datasets.filter((dataset) => {
-          if (days_name.indexOf(dataset.label) === -1) return true
-          return activeDay[days_name.indexOf(dataset.label)]
+          if (config.days_name.indexOf(dataset.label) === -1) return true
+          return activeDay[config.days_name.indexOf(dataset.label)]
         })
         station.data.datasets = newDatasets
       }
@@ -220,9 +196,9 @@ class GraphicsView extends Component {
   manageActiveDay = (id) => {
     let newActiveDay = this.state.activeDay.slice(0)
     if (id === null || this.state.activeDay.every((day, idday) => (idday === id) ? true : !day)) {
-          newActiveDay = days_name.map(() => true)
+          newActiveDay = config.days_name.map(() => true)
     } else if (this.state.activeDay.every((day) => day)) {
-      newActiveDay = days_name.map(() => false)
+      newActiveDay = config.days_name.map(() => false)
       newActiveDay[id] = true
     } else {
       newActiveDay[id] = !newActiveDay[id]
@@ -236,7 +212,7 @@ class GraphicsView extends Component {
       <View
         style={{flexDirection: "row"}}
       >
-        {days_name.map((day, id) =>
+        {config.days_name.map((day, id) =>
           <TouchableOpacity
             key={id}
             style={styles.daySelectorContainer}
@@ -246,23 +222,12 @@ class GraphicsView extends Component {
             <Text
               style={[styles.daySelectorText, {backgroundColor: colors.days_color[id], opacity: (this.state.activeDay[id]) ? 1 : 0.5}]}
             >
-              {days_name[id]}
+              {config.days_name[id]}
             </Text>
           </TouchableOpacity>
         )}
       </View>
     )
-  }
-
-  getFollowedStation = (stationList, by, value) => {
-    return {...stationList.filter((s) => s[by] === value)}['0']
-  }
-
-  changeStationName = (number, name) => {
-    const newFollowed = this.props.followedStations.slice(0)
-    this.getFollowedStation(newFollowed, "number", number).name = name
-    this.props.setFollowedStation(newFollowed)
-    this.forceUpdate()
   }
 
   render() {
@@ -280,7 +245,7 @@ class GraphicsView extends Component {
     }
     return (
       <View style={styles.container}>
-        {(!this.state.refreshing || this.state.dragRefresh) ?
+        {(!this.state.refreshing || (this.state.dragRefresh && this.state.datas._dataBlob)) ?
           <ListView
           style={{flex: 1}}
           dataSource={listWithEmptyStart}
@@ -292,10 +257,8 @@ class GraphicsView extends Component {
             }
             return (
               <StationAverageGraph
-                changeStationName={this.changeStationName}
-                station_title={this.getFollowedStation(this.props.followedStations, "order", id - 1).name}
+                station_title={getFollowedStation(this.props.followedStations, "order", id - 1).name}
                 station={station}
-                changeStationOrder={this.changeStationOrder}
                 closeAllEdit={(stationEmmiter) => PubSub.publish('CloseAllGraphEdit', stationEmmiter)}
               />
             )
