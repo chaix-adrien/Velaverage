@@ -24,32 +24,36 @@ export class StationAvialablesBikes extends Component {
 
   percent_to_color = (percent) => {
     if (percent > 0.5) return "green"
-    else if (percent > 0.3) return colors.main
+    else if (percent >= 0.2) return colors.main
     else if (percent != 0) return "red"
     else return "black"
   }
 
   render() {
-    const {station} = this.props
+    const {station, scale} = this.props
     return (
-     <View style={[{flexDirection: "row"}, (this.props.containerStyle) ? this.props.containerStyle : {}]}>
-       <View>
+     <View style={[{margin: 3}, (this.props.containerStyle) ? this.props.containerStyle : {}]}>
+       <View style={{flexDirection: "row"}}>
          <Icon
           name="bicycle"
-          size={20}
-          color={this.percent_to_color(station.available_bikes / station.bike_stands)}
-          style={{margin: 2}}
+          size={scale ? scale * 14 : 14}
+          color="white"
+          style={{flex: 1, margin: scale ? scale * 2 : 2,
+            padding: scale ? scale * 2 : 2,
+            paddingBottom: -5,
+            borderRadius: 3,
+            backgroundColor: this.percent_to_color(station.available_bikes / station.bike_stands)}}
         />
-        <Text style={styles.available_bikesText}>{station.available_bikes}</Text>
-       </View>
-       <View>
          <Icon
             name="th-large"
-            size={20}
+            size={scale ? scale * 20 : 20}
             color={this.percent_to_color(station.available_bike_stands / station.bike_stands)}
-            style={{margin: 2}}
+            style={{flex: 1, margin: scale ? scale * 2 : 2}}
           />
-        <Text style={styles.available_bikesText}>{station.available_bike_stands}</Text>
+       </View>
+       <View style={{flexDirection: "row", justifyContent: "space-around"}}>
+        <Text style={[styles.available_bikesText, {fontSize: scale ? scale * 14 : 14}]}>{station.available_bikes}</Text>
+        <Text style={[styles.available_bikesText, {fontSize: scale ? scale * 14 : 14}]}>{station.available_bike_stands}</Text>
        </View>
      </View>
     )
@@ -106,8 +110,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   available_bikesText: {
+    flex: 1, 
     textAlign: "center",
-    fontSize: 14,
     fontWeight: "bold",
     color: "black",
     top: -5,
