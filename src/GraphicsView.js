@@ -303,5 +303,3 @@ export default GraphicsView
 
 //TODO
 //Check si retour de fetch OK
-// de base, afficher que le jour d'aujourdhui
-//ordre des graphiques

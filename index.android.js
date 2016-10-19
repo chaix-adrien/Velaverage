@@ -179,7 +179,6 @@ AppRegistry.registerComponent('Velaverage', () => Velaverage);
 //TODO  
 //(load station file, si pas en local et pas internet: message d'erreur)
 //choix de la precision
-//tab Followed (par defaut) afficher les station avec un boutton refresh a chaques
 //Tab Search (station, date, heure) => sortir un grap 1h avant / apres
 
 /*
