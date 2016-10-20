@@ -129,6 +129,7 @@ class MapStations extends Component {
             onClose={() => this.setState({displayPopup: false})}
           >
             <StationsListElement
+              loadOnClick={false}
               realTimeInfo={this.props.realTimeInfo[this.state.popupStation ? this.state.popupStation.number : 0]}
               station={this.state.popupStation}
               un_followStation={this.props.un_followStation}

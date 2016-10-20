@@ -24,7 +24,7 @@ export class StationAvialablesBikes extends Component {
 
   percent_to_color = (percent) => {
     if (percent > 0.5) return "green"
-    else if (percent >= 0.2) return colors.main
+    else if (percent >= 0.2) return "#ef6c00"
     else if (percent != 0) return "red"
     else return "black"
   }
@@ -71,10 +71,11 @@ class StationsListElement extends Component {
   render() {
     const {station, realTimeInfo, flexDirection} = this.props
     return (
-      <TouchableOpacity onPress={() => {
+      <TouchableOpacity style={{backgroundColor: colors.background}} onPress={() => {
+        if (this.props.loadOnClick) {
           this.view.transitionTo({height: 0})
           this.props.loadRealTimeInfo(station.number, () => this.view.transitionTo({height: 40}))
-        }}>
+        }}}>
         <Animatable.View
           ref={(e => (this.view = e))}
           style={{flexDirection: flexDirection, flex: 1, height: (flexDirection === "row") ? 40 : null, justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderColor: "grey"}}

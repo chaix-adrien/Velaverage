@@ -21,6 +21,7 @@ import RNFS from 'react-native-fs'
 import ScrollableTabView from 'react-native-scrollable-tab-view'
 import MapView from 'react-native-maps';
 
+import colors from './colors.json'
 import GraphicsView from './src/GraphicsView'
 import StationsList from './src/StationsList'
 import FollowedList from './src/FollowedList'
@@ -109,8 +110,8 @@ class Velaverage extends Component {
     return (
       <View style={styles.container}>
         <ScrollableTabView
-          tabBarUnderlineStyle={{backgroundColor: '#ef6c00'}}
-          tabBarActiveTextColor="#e65100"
+          tabBarUnderlineStyle={{backgroundColor: colors.main}}
+          tabBarActiveTextColor={colors.darkMain}
           locked={true}
           onChangeTab={(tab) => this.onChangeTab(tab.i)}
         >
@@ -187,4 +188,5 @@ color theme
 list : display only followed de base ?
 tab at startup
 default day displayed par rapport a aujourdhui
+font size
 */

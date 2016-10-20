@@ -15,7 +15,7 @@ import colors from '../colors.json'
 const legend = {
   enabled: true,
   fontStyle: 1,
-  textColor: '#458DCB',
+  textColor: colors.darkMain,
   textSize: 13,
   position: 'BELOW_CHART_LEFT',
   form: 'CIRCLE',
@@ -56,7 +56,7 @@ export class StationAverageGraph extends Component {
           legend={legend}
           data={station.data}
           drawGridBackground={true}
-          borderColor={'teal'}
+          borderColor={colors.darkMain}
           borderWidth={1}
           drawBorders={true}
           touchEnabled={true}
@@ -64,8 +64,8 @@ export class StationAverageGraph extends Component {
           scaleEnabled={true}
           scaleXEnabled={true}
           scaleYEnabled={true}
-          pinchZoom={true}
-          doubleTapToZoomEnabled={true}
+          pinchZoom={false}
+          doubleTapToZoomEnabled={false}
           dragDecelerationEnabled={true}
           dragDecelerationFrictionCoef={0.99}
           keepPositionOnRotation={false}

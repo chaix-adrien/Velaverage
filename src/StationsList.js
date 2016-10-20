@@ -152,6 +152,7 @@ class StationsList extends Component {
         }))}
         enableEmptySections={true}
         renderRow={(rowData, sid, id) => <StationsListElement
+          loadOnClick={true}
           realTimeInfo={this.state.realTimeInfo[rowData.number]}
           station={rowData}
           un_followStation={this.un_followStation}
