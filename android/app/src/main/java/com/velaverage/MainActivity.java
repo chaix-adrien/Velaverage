@@ -1,4 +1,4 @@
-package com.velaverage;
+package com.velaverageDebug;
 
 import com.facebook.react.ReactActivity;
 

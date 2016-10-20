@@ -1,4 +1,4 @@
-package com.velaverage;
+package com.velaverageDebug;
 
 import android.app.Application;
 import android.util.Log;

@@ -3,7 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start"
+      "start": "node node_modules/react-native/local-cli/cli.js start",
+      "changePackageNameToDebug": "sed -i s/velaverage/velaverageDebug/g android/app/src/main/java/com/velaverage/MainApplication.java android/app/src/main/AndroidManifest.xml android/app/src/main/java/com/velaverage/MainActivity.java android/app/build.gradle android/app/src/main/res/values/strings.xml android/app/BUCK",
+      "changePackageNameToRelease": "sed -i s/velaverageDebug/velaverage/g android/app/src/main/java/com/velaverage/MainApplication.java android/app/src/main/AndroidManifest.xml android/app/src/main/java/com/velaverage/MainActivity.java android/app/build.gradle android/app/src/main/res/values/strings.xml android/app/BUCK",
+      "assembleRelease": "npm run changePackageNameToRelease && cd android && ./gradlew assembleRelease; cd ../ && npm run changePackageNameToDebug",
+      "uninstallRelease": "adb uninstall com.velaverage",
+      "installRelease": "npm run uninstallRelease && npm run assembleRelease && adb install android/app/build/outputs/apk/app-release.apk"
   },
   "dependencies": {
     "pubsub-js": "^1.5.4",
