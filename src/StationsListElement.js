@@ -75,29 +75,29 @@ class StationsListElement extends Component {
           this.view.transitionTo({height: 0})
           this.props.loadRealTimeInfo(station.number, () => this.view.transitionTo({height: 40}))
         }}>
-      <Animatable.View
-        ref={(e => (this.view = e))}
-        style={{flexDirection: flexDirection, flex: 1, height: (flexDirection === "row") ? 40 : null, justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderColor: "grey"}}
-      >
-        <View>
-          <Text style={[styles.stationName, {textAlign: (flexDirection === "row") ? "left" : "center"}]}>{station.name.slice(8)}</Text>
-          <Text style={{marginLeft: 5, textAlign: (flexDirection === "row") ? "left" : "center"}}>{(station.address.length > 25) ? station.address.slice(0, 23) + "..." : station.address}</Text>
-        </View>
-        <View style={{flexDirection: "row", marginLeft: 5}}>
-          {(realTimeInfo) ?
-            <StationAvialablesBikes station={realTimeInfo} />
-            : null
-          }
-          <TouchableOpacity onPress={() => this.props.un_followStation(station.number)} >
-          <Icon
-            name={this.props.followed ? "minus-circle" : "plus-circle"}
-            size={40}
-            color={this.props.followed ? "red" : "green"}
-            style={{marginRight: 5, marginLeft: 5, marginBottom: (flexDirection === "row") ? 0 : 5}}
-          />
-          </TouchableOpacity>
-         </View>
-      </Animatable.View>
+        <Animatable.View
+          ref={(e => (this.view = e))}
+          style={{flexDirection: flexDirection, flex: 1, height: (flexDirection === "row") ? 40 : null, justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderColor: "grey"}}
+        >
+          <View>
+            <Text style={[styles.stationName, {textAlign: (flexDirection === "row") ? "left" : "center"}]}>{station.name.slice(8)}</Text>
+            <Text style={{marginLeft: 5, textAlign: (flexDirection === "row") ? "left" : "center"}}>{(station.address.length > 25) ? station.address.slice(0, 23) + "..." : station.address}</Text>
+          </View>
+          <View style={{flexDirection: "row", marginLeft: 5}}>
+            {(realTimeInfo) ?
+              <StationAvialablesBikes station={realTimeInfo} />
+              : null
+            }
+            <TouchableOpacity onPress={() => this.props.un_followStation(station.number)} >
+            <Icon
+              name={this.props.followed ? "minus-circle" : "plus-circle"}
+              size={40}
+              color={this.props.followed ? "red" : "green"}
+              style={{marginRight: 5, marginLeft: 5, marginBottom: (flexDirection === "row") ? 0 : 5}}
+            />
+            </TouchableOpacity>
+           </View>
+        </Animatable.View>
       </TouchableOpacity>
     )
   }

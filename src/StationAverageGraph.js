@@ -52,7 +52,7 @@ export class StationAverageGraph extends Component {
           <StationAvialablesBikes station={station} containerStyle={styles.stationAviables} />
         </View>
         <LineChart
-          style={{height:300, width: 350}}
+          style={{height:200, width: 350}}
           legend={legend}
           data={station.data}
           drawGridBackground={true}
